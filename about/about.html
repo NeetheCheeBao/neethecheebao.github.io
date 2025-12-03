@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+    }
+
+    .bg-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+      z-index: 0;
+    }
+
+    .neon-text {
+      position: relative;
+      z-index: 1;
+      font-size: 6vw;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      text-decoration: none;
+
+      text-shadow: 0 0 5px currentColor,
+                   0 0 10px currentColor,
+                   0 0 20px currentColor,
+                   0 0 40px currentColor,
+                   0 0 80px currentColor;
+ 
+      animation: neonFlash 2s linear infinite;
+    }
+
+    .neon-text:hover {
+      text-decoration: none;
+    }
+
+    @keyframes neonFlash {
+      0% { color: #ff00ff; }
+      33% { color: #00ffff; }
+      66% { color: #ffff00; }
+      100% { color: #ff00ff; }
+    }
+
+    @media (max-width: 768px) {
+      .neon-text {
+        font-size: 10vw;
+        letter-spacing: 0.1em;
+        text-align: center;
+        padding: 0 20px;
+      }
+    }
+  </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <a href="https://github.com/NeetheCheeBao" target="_blank" class="neon-text">
+    NEETHECHEEBAO
+  </a>
+
+</body>
+</html>
