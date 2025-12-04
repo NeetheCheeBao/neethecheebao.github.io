@@ -1,0 +1,412 @@
+:root{
+  --bg1: #0f0c29;
+  --bg2: #302b63;
+  --accent1: #ff2d95;
+  --accent2: #00e6ff;
+  --accent3: #ffd300;
+  --glass: rgba(255,255,255,0.06);
+  --glass-2: rgba(255,255,255,0.03);
+  --card-glow: 0 8px 40px rgba(0,0,0,0.6);
+  --neon-blur: 24px;
+  --fade: linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.35));
+  --vh: 100vh;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family:"Rubik",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  color:#e7eefc;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  background: radial-gradient(1200px 600px at 10% 20%, rgba(255,45,149,0.12), transparent 8%), radial-gradient(900px 400px at 90% 80%, rgba(0,230,255,0.08), transparent 8%), linear-gradient(180deg,var(--bg1),var(--bg2));
+  overflow-x:hidden;
+}
+
+.scene{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding:48px 24px;
+  gap:28px;
+}
+
+.header{
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  text-decoration:none;
+}
+
+.badge{
+  font-family:"Orbitron",sans-serif;
+  font-weight:700;
+  letter-spacing:0.16em;
+  font-size:22px;
+  padding:12px 18px;
+  border-radius:12px;
+  background:linear-gradient(90deg, rgba(255,45,149,0.18), rgba(0,230,255,0.12));
+  box-shadow:0 6px 30px rgba(0,0,0,0.6), 0 0 40px rgba(255,45,149,0.08), 0 0 80px rgba(0,230,255,0.06);
+  color:transparent;
+  -webkit-background-clip:text;
+  background-clip:text;
+  background-image: conic-gradient(from 120deg, #ff2d95, #ffd300, #00e6ff, #ff2d95);
+  animation: hueRotate 8s linear infinite;
+}
+
+@keyframes hueRotate{
+  0%{filter:hue-rotate(0deg)}
+  50%{filter:hue-rotate(180deg)}
+  100%{filter:hue-rotate(360deg)}
+}
+
+nav{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.nav-btn{
+  font-weight:600;
+  padding:10px 14px;
+  border-radius:10px;
+  backdrop-filter: blur(6px);
+  background:linear-gradient(180deg,var(--glass),var(--glass-2));
+  border:1px solid rgba(255,255,255,0.04);
+  color:rgba(231,238,252,0.9);
+  text-decoration:none;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+
+.nav-btn:hover{ transform:translateY(-4px); box-shadow:0 14px 30px rgba(0,0,0,0.6); }
+
+.hero{
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  gap:28px;
+  align-items:center;
+  justify-content:space-between;
+  padding:28px;
+  border-radius:20px;
+  background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.04);
+  box-shadow:var(--card-glow);
+  position:relative;
+  overflow:hidden;
+}
+
+.hero-left{
+  max-width:60%;
+}
+
+.title{
+  font-family:"Orbitron",sans-serif;
+  font-size:48px;
+  margin:0 0 8px 0;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  line-height:1;
+  text-shadow: 0 0 18px rgba(255,45,149,0.18), 0 0 30px rgba(0,230,255,0.08);
+  background: linear-gradient(90deg,#ff2d95,#ffd300,#00e6ff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color:transparent;
+  animation: titleShift 6s ease-in-out infinite;
+}
+
+@keyframes titleShift{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-6px) rotate(-0.6deg)}
+  100%{transform:translateY(0)}
+}
+
+.subtitle{
+  color:rgba(231,238,252,0.7);
+  margin:0;
+  font-size:15px;
+}
+
+.cta{
+  margin-top:18px;
+  display:flex;
+  gap:12px;
+}
+
+.btn{
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:700;
+  text-decoration:none;
+  color:#051029;
+  background:linear-gradient(90deg,#ffd300,#ff2d95);
+  box-shadow:0 12px 30px rgba(255,45,149,0.08), inset 0 -4px 10px rgba(0,0,0,0.15);
+  transition:transform .18s ease;
+}
+
+.btn.secondary{
+  background:linear-gradient(90deg,#00e6ff,#7f39fb);
+  color:#02101b;
+}
+
+.hero-right{
+  position:relative;
+  width:340px;
+  height:180px;
+  border-radius:14px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:conic-gradient(from 120deg, rgba(255,45,149,0.08), rgba(255,211,0,0.06), rgba(0,230,255,0.06));
+  border:1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+}
+
+.neon-sun{
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #ffd300, rgba(255,211,0,0.8) 10%, transparent 25%), conic-gradient(#ff2d95, #ffd300, #00e6ff);
+  filter:blur(18px) saturate(160%);
+  animation: sunPulse 4s ease-in-out infinite;
+  box-shadow:0 0 120px rgba(255,45,149,0.12), 0 0 40px rgba(255,211,0,0.06), 0 0 200px rgba(0,230,255,0.04);
+}
+
+@keyframes sunPulse{
+  0%{transform:scale(0.94)}
+  50%{transform:scale(1.05)}
+  100%{transform:scale(0.94)}
+}
+
+.grid{
+  position:fixed;
+  left:50%;
+  bottom:-5vh;
+  width:200%;
+  height:70vh;
+  transform:translateX(-50%) perspective(800px) rotateX(62deg) translateY(20vh);
+  background:
+    linear-gradient(transparent 60%, rgba(255,255,255,0.03) 61%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 60px);
+  opacity:0.85;
+  mix-blend-mode:overlay;
+  animation: gridMove 14s linear infinite;
+  pointer-events:none;
+}
+
+@keyframes gridMove{
+  0%{transform:translateX(-50%) perspective(800px) rotateX(62deg) translateY(20vh) translateZ(0)}
+  100%{transform:translateX(-49%) perspective(800px) rotateX(62deg) translateY(20vh) translateZ(-120px)}
+}
+
+.posts{
+  width:100%;
+  max-width:1100px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+  margin-top:6px;
+}
+
+.post{
+  border-radius:14px;
+  padding:18px;
+  min-height:160px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.04);
+  box-shadow:var(--card-glow);
+  position:relative;
+  overflow:hidden;
+  transition:transform .28s cubic-bezier(.2,.9,.2,1), box-shadow .28s;
+}
+
+.post:hover{ transform:translateY(-8px) scale(1.01); box-shadow:0 26px 80px rgba(0,0,0,0.7); }
+
+.post .tag{
+  display:inline-block;
+  font-weight:700;
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:12px;
+  background:linear-gradient(90deg,#ff2d95,#00e6ff);
+  color:#02101b;
+  margin-bottom:12px;
+}
+
+.post h3{
+  margin:0 0 8px 0;
+  font-family:"Orbitron",sans-serif;
+  font-size:18px;
+  letter-spacing:0.02em;
+  color:transparent;
+  background:linear-gradient(90deg,#ffd300,#ff2d95,#00e6ff);
+  -webkit-background-clip:text;
+  background-clip:text;
+}
+
+.post p{
+  margin:0;
+  color:rgba(231,238,252,0.72);
+  font-size:14px;
+  line-height:1.55;
+}
+
+.floating{
+  position:absolute;
+  border-radius:8px;
+  transform:translate3d(0,0,0);
+  mix-blend-mode:screen;
+  filter:blur(6px);
+  opacity:0.9;
+  pointer-events:none;
+  animation: floaty 8s ease-in-out infinite;
+}
+
+.f1{ width:260px; height:10px; left:6%; top:22%; background:linear-gradient(90deg,#ff2d95,#ffd300); animation-duration:10s; animation-delay:-2s; transform:rotate(6deg); }
+.f2{ width:160px; height:8px; right:8%; top:12%; background:linear-gradient(90deg,#00e6ff,#7f39fb); animation-duration:12s; animation-delay:0s; transform:rotate(-6deg); }
+.f3{ width:120px; height:120px; left:12%; top:60%; border-radius:50%; background:conic-gradient(#00e6ff,#ff2d95,#ffd300); filter:blur(22px); opacity:0.16; animation-duration:14s; }
+
+@keyframes floaty{
+  0%{transform:translateY(0) rotate(0deg)}
+  50%{transform:translateY(-18px) rotate(6deg)}
+  100%{transform:translateY(0) rotate(0deg)}
+}
+
+.footer{
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:36px;
+  padding:18px;
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+  border:1px solid rgba(255,255,255,0.03);
+}
+
+@media (max-width:980px){
+  .posts{ grid-template-columns:repeat(2,1fr); }
+  .hero-left{ max-width:55%; }
+  .hero-right{ width:240px; height:140px; }
+}
+
+@media (max-width:640px){
+  .header{ flex-direction:column; align-items:flex-start; gap:16px; }
+  .posts{ grid-template-columns:1fr; }
+  .hero{ flex-direction:column; align-items:flex-start; gap:18px; padding:18px; }
+  .hero-left{ max-width:100%; }
+  .hero-right{ width:100%; height:160px; border-radius:12px; }
+  .title{ font-size:34px; }
+}
+
+.sr{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+canvas#grid{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block}
+
+/* 分页容器 */
+.pagination {
+  margin: 40px auto;
+  text-align: center;
+  position: relative;
+  z-index: 10; /* 确保在背景之上 */
+}
+
+/* 复用博客卡片的基础样式 */
+.pagination-btn,
+.pagination-ellipsis {
+  /* 复用博客卡片的背景和边框样式 */
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: var(--card-glow);
+  color: rgba(231,238,252,0.9);
+  
+  /* 保持正方形和居中 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 4px;
+  border-radius: 10px; /* 与博客卡片相似的圆角 */
+  font-size: 14px;
+  transition: all 0.28s cubic-bezier(.2,.9,.2,1);
+}
+
+/* 页码按钮特有样式 */
+.pagination-btn {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  /* 边框渐变效果（与博客卡片统一） */
+  border: double 1px transparent;
+  background-image: 
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)),
+    linear-gradient(90deg, hsl(0 90% 60%), hsl(0 80% 50%));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* 上一页/下一页按钮文字 */
+.pagination-prev {
+  content: "上一页";
+}
+
+.pagination-next {
+  content: "下一页";
+}
+
+/* 调整上一页/下一页按钮宽度（适应文字） */
+.pagination-prev,
+.pagination-next {
+  width: auto;
+  padding: 0 12px;
+}
+
+/* 鼠标悬停效果（与博客卡片统一） */
+.pagination-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.6);
+}
+
+/* 修改 style.css 中的分页按钮选中状态 */
+.pagination-btn.active {
+  /* 更醒目的背景渐变（与主题色呼应） */
+  background-image: 
+    linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.1)),
+    linear-gradient(90deg, var(--accent3), var(--accent1)); /* 用黄色到粉色的渐变增强对比 */
+  
+  /* 选中态放大+上浮效果 */
+  transform: translateY(-6px) scale(1.08);
+  
+  /* 更强的发光效果 */
+  box-shadow: 0 8px 24px rgba(255, 211, 0, 0.2), 0 0 12px rgba(255, 45, 149, 0.15);
+  
+  /* 文字颜色更亮 */
+  color: #ffffff;
+  font-weight: 700;
+  
+  /* 边框强化 */
+  border: double 1.5px transparent;
+  z-index: 20; /* 确保在其他按钮上方 */
+}
+
+/* 修复悬停状态与选中状态的层级关系 */
+.pagination-btn.active:hover {
+  transform: translateY(-6px) scale(1.08); /* 保持选中态的放大效果 */
+  box-shadow: 0 12px 30px rgba(255, 211, 0, 0.25), 0 0 18px rgba(255, 45, 149, 0.2);
+}
