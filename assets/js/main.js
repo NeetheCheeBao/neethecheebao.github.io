@@ -93,3 +93,27 @@ function draw(t){
 }
 
 requestAnimationFrame(draw);
+
+async function loadBlogPosts() {
+  const container = document.getElementById('posts-container');
+  if (!container) return;
+
+  try {
+    const indexResponse = await fetch('posts/index.json');
+    if (!indexResponse.ok) throw new Error('无法获取博客列表');
+    
+    const postFileNames = await indexResponse.json(); 
+
+    for (const fileName of postFileNames) {
+      const postResponse = await fetch(`posts/${fileName}`);
+      if (!postResponse.ok) throw new Error(`加载 ${fileName} 失败`);
+      
+      const postHtml = await postResponse.text();
+      container.innerHTML += postHtml;
+    }
+  } catch (error) {
+    console.error('加载博客失败:', error);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadBlogPosts);
