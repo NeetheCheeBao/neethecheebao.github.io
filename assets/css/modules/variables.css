@@ -1,0 +1,27 @@
+:root{
+  --bg1: #0f0c29;
+  --bg2: #302b63;
+  --accent1: #ff2d95;
+  --accent2: #00e6ff;
+  --accent3: #ffd300;
+  --glass: rgba(255,255,255,0.06);
+  --glass-2: rgba(255,255,255,0.03);
+  --card-glow: 0 8px 40px rgba(0,0,0,0.6);
+  --neon-blur: 24px;
+  --fade: linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.35));
+  --vh: 100vh;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family:"Rubik",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  color:#e7eefc;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  background: radial-gradient(1200px 600px at 10% 20%, rgba(255,45,149,0.12), transparent 8%), radial-gradient(900px 400px at 90% 80%, rgba(0,230,255,0.08), transparent 8%), linear-gradient(180deg,var(--bg1),var(--bg2));
+  overflow-x:hidden;
+}
+
+.sr{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+canvas#grid{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block}
