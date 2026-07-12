@@ -62,6 +62,51 @@
     </footer>
   </div>
 
+  <div id="music-player" class="music-player is-collapsed" aria-label="音乐播放器">
+    <button id="music-player-mini" class="music-player__mini" type="button" aria-label="展开播放器"></button>
+    <div class="music-player__body">
+      <div class="music-player__header">
+        <div id="music-player-disc" class="music-player__disc" aria-hidden="true"></div>
+        <div class="music-player__info">
+          <div id="music-player-title" class="music-player__title">加载中…</div>
+        </div>
+        <button id="music-player-list-toggle" class="music-player__toggle" type="button" aria-label="展开播放列表" aria-expanded="false"></button>
+        <button id="music-player-toggle" class="music-player__toggle" type="button" aria-label="收起播放器"></button>
+      </div>
+      <div class="music-player__progress-wrap">
+        <span id="music-player-current" class="music-player__time">0:00</span>
+        <div class="music-player__progress-track">
+          <div id="music-player-progress-bar" class="music-player__progress-bar"></div>
+          <input id="music-player-progress" class="music-player__progress" type="range" min="0" max="100" value="0" aria-label="播放进度">
+        </div>
+        <span id="music-player-duration" class="music-player__time">0:00</span>
+      </div>
+      <div class="music-player__mode-row">
+        <button id="music-player-mode" class="music-player__mode" type="button" aria-label="播放模式">
+          <span id="music-player-mode-icon" class="music-player__mode-icon" aria-hidden="true"></span>
+          <span id="music-player-mode-label" class="music-player__mode-label">列表循环</span>
+        </button>
+      </div>
+      <div class="music-player__controls">
+        <button id="music-player-prev" class="music-player__btn" type="button" aria-label="上一首"></button>
+        <button id="music-player-play" class="music-player__btn music-player__btn--play" type="button" aria-label="播放"></button>
+        <button id="music-player-next" class="music-player__btn" type="button" aria-label="下一首"></button>
+        <div class="music-player__volume">
+          <span class="music-player__volume-icon" aria-hidden="true"></span>
+          <input id="music-player-volume" type="range" min="0" max="100" value="80" aria-label="音量">
+        </div>
+      </div>
+      <div id="music-player-playlist" class="music-player__playlist" hidden>
+        <div class="music-player__playlist-header">
+          <span class="music-player__playlist-title">播放列表</span>
+          <span id="music-player-playlist-count" class="music-player__playlist-count">0 首</span>
+        </div>
+        <ul id="music-player-playlist-items" class="music-player__playlist-items"></ul>
+      </div>
+    </div>
+    <audio id="music-player-audio" preload="metadata"></audio>
+  </div>
+
   <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

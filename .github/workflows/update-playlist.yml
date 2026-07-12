@@ -1,0 +1,34 @@
+name: Update Music Playlist
+
+on:
+  push:
+    paths:
+      - 'assets/audio/*.mp3'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-playlist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate playlist.json from mp3 files
+        run: python3 scripts/generate-playlist.py
+
+      - name: Commit and push playlist.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/audio/playlist.json
+
+          if git diff --staged --quiet; then
+            echo "playlist.json is already up to date."
+            exit 0
+          fi
+
+          git commit -m "chore: auto-update playlist from audio files"
+          git push
