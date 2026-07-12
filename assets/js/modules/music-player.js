@@ -373,14 +373,7 @@ export async function initMusicPlayer() {
     if (!res.ok) throw new Error('playlist not found');
     playlist = await res.json();
 
-    const validTracks = [];
-    for (const track of playlist) {
-      const check = await fetch(track.src, { method: 'HEAD' });
-      if (check.ok) validTracks.push(track);
-    }
-    playlist = validTracks;
-
-    if (!playlist.length) {
+    if (!Array.isArray(playlist) || !playlist.length) {
       showEmptyState(els);
       return;
     }

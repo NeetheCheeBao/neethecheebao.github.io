@@ -2,19 +2,27 @@ name: Update Music Playlist
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'assets/audio/*.mp3'
   workflow_dispatch:
 
-permissions:
-  contents: write
+concurrency:
+  group: update-playlist
+  cancel-in-progress: true
 
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
 
       - name: Generate playlist.json from mp3 files
         run: python3 scripts/generate-playlist.py
@@ -31,4 +39,5 @@ jobs:
           fi
 
           git commit -m "chore: auto-update playlist from audio files"
-          git push
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"

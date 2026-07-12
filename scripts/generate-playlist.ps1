@@ -4,10 +4,7 @@ $extensions = @(".mp3")
 
 function Encode-AudioPath {
     param([string]$FileName)
-    $encoded = ($FileName.ToCharArray() | ForEach-Object {
-        if ($_ -eq ' ') { '%20' } else { $_ }
-    }) -join ''
-    return "assets/audio/$encoded"
+    return "assets/audio/" + [System.Uri]::EscapeDataString($FileName)
 }
 
 if (-not (Test-Path $audioDir)) {

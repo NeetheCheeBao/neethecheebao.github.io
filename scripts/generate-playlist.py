@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import json
 from pathlib import Path
+from urllib.parse import quote
 
 AUDIO_DIR = Path(__file__).resolve().parent.parent / "assets" / "audio"
 OUTPUT = AUDIO_DIR / "playlist.json"
 
 
 def encode_path(filename: str) -> str:
-    return "assets/audio/" + filename.replace(" ", "%20")
+    return "assets/audio/" + quote(filename)
 
 
 def main() -> None:
@@ -21,6 +22,7 @@ def main() -> None:
     OUTPUT.write_text(
         json.dumps(tracks, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     print(f"Generated {len(tracks)} track(s) -> {OUTPUT}")
 
