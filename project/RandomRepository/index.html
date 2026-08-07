@@ -1,35 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title></title>
-  <script>
-    (async () => {
-      const api = 'https://api.github.com/users/NeetheCheeBao/repos?per_page=100&type=owner';
-      const proxy = 'https://corsproxy.io/?' + encodeURIComponent(api);
-
-      try {
-        const res = await fetch(proxy);
-        if (!res.ok) throw new Error();
-        const repos = await res.json();
-
-        const exclude = new Set(['neethecheebao.github.io', '.github']);
-        const list = repos
-          .filter(r => !exclude.has(r.name) && !r.fork)
-          .map(r => r.html_url);
-
-        if (list.length === 0) {
-          location.replace('https://github.com/NeetheCheeBao?tab=repositories');
-          return;
-        }
-
-        const url = list[Math.floor(Math.random() * list.length)];
-        location.replace(url);
-      } catch {
-        location.replace('https://github.com/NeetheCheeBao?tab=repositories');
-      }
-    })();
-  </script>
+<meta charset="UTF-8">
+<title></title>
+<script>
+(async()=>{
+const api='https://api.github.com/users/NeetheCheeBao/repos?per_page=100&type=owner';
+const exclude=new Set(['neethecheebao.github.io','.github']);
+const cookieName='visitedRepos';
+function getVisited(){
+const m=document.cookie.match(new RegExp('(?:^|; )'+cookieName+'=([^;]*)'));
+return m?new Set(decodeURIComponent(m[1]).split(',').filter(Boolean)):new Set();
+}
+function setVisited(set){
+document.cookie=cookieName+'='+encodeURIComponent([...set].join(','))+'; path=/';
+}
+try{
+const res=await fetch(api);
+if(!res.ok)throw 0;
+const repos=await res.json();
+let candidates=repos.filter(r=>!exclude.has(r.name)&&!r.fork).map(r=>({name:r.name,url:r.html_url}));
+if(!candidates.length){location.replace('https://github.com/NeetheCheeBao?tab=repositories');return;}
+let visited=getVisited();
+let available=candidates.filter(c=>!visited.has(c.name));
+if(!available.length){
+visited=new Set();
+available=candidates;
+}
+const pick=available[Math.floor(Math.random()*available.length)];
+visited.add(pick.name);
+setVisited(visited);
+location.replace(pick.url);
+}catch{
+location.replace('https://github.com/NeetheCheeBao?tab=repositories');
+}
+})();
+</script>
 </head>
 <body></body>
 </html>
