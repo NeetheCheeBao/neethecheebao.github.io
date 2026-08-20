@@ -47,14 +47,14 @@
 
   function loadHistory() {
     try {
-      return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+      return JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "[]");
     } catch {
       return [];
     }
   }
 
   function saveHistory(list) {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY)));
+    sessionStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY)));
   }
 
   function addToHistory(content, source = "图片") {
@@ -498,7 +498,7 @@
 
   clearHistoryBtn.addEventListener("click", () => {
     if (confirm("确定要清空所有历史记录吗？此操作不可恢复。")) {
-      localStorage.removeItem(HISTORY_KEY);
+      sessionStorage.removeItem(HISTORY_KEY);
       renderHistory();
       toast("已清空历史记录");
     }
