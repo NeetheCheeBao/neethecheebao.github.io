@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="免费在线二维码解析工具，支持上传图片、拖拽、粘贴、摄像头实时扫描，批量解码，历史记录导出。" />
+  <title>二维码解码器 - NeetheCheeBao</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">📷</span>
+        <h1>二维码解码器</h1>
+      </div>
+      <p class="subtitle">免费 · 本地解析 · 支持批量 · 隐私安全</p>
+    </header>
+
+    <main class="main">
+      <!-- 模式切换 -->
+      <div class="tabs">
+        <button class="tab active" data-tab="upload">图片解码</button>
+        <button class="tab" data-tab="camera">摄像头解码</button>
+        <button class="tab" data-tab="history">历史记录</button>
+      </div>
+
+      <!-- 图片解码区域 -->
+      <section id="upload-panel" class="panel active">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" multiple hidden />
+          <div class="drop-content">
+            <div class="drop-icon">📁</div>
+            <p class="drop-title">拖拽图片到此处，或点击上传</p>
+            <p class="drop-hint">支持 PNG / JPG / GIF / WebP，可一次选择多张图片批量解码<br>也可直接 Ctrl+V 粘贴截图</p>
+            <button class="btn primary" id="uploadBtn">选择图片</button>
+          </div>
+        </div>
+
+        <div class="preview-list" id="previewList"></div>
+      </section>
+
+      <!-- 摄像头解码区域 -->
+      <section id="camera-panel" class="panel">
+        <div class="camera-wrapper">
+          <div id="reader" class="reader"></div>
+          <div class="camera-controls">
+            <button class="btn primary" id="startCameraBtn">开启摄像头</button>
+            <button class="btn secondary" id="stopCameraBtn" style="display:none;">关闭摄像头</button>
+            <button class="btn secondary" id="switchCameraBtn" style="display:none;">切换摄像头</button>
+          </div>
+          <p class="camera-tip">提示：请允许浏览器使用摄像头权限。扫描成功后会自动记录结果。</p>
+        </div>
+      </section>
+
+      <!-- 历史记录区域 -->
+      <section id="history-panel" class="panel">
+        <div class="history-toolbar">
+          <span id="historyCount">共 0 条记录</span>
+          <div class="history-actions">
+            <button class="btn secondary small" id="exportTxtBtn">导出 TXT</button>
+            <button class="btn secondary small" id="exportCsvBtn">导出 CSV</button>
+            <button class="btn danger small" id="clearHistoryBtn">清空记录</button>
+          </div>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty-state">暂无解码记录</div>
+        </div>
+      </section>
+
+      <!-- 结果展示区域（共用） -->
+      <section class="result-section" id="resultSection" style="display:none;">
+        <div class="result-header">
+          <h2>解码结果</h2>
+          <button class="btn secondary small" id="clearResultBtn">清空结果</button>
+        </div>
+        <div class="result-list" id="resultList"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>完全在浏览器本地解析，图片不会上传到任何服务器</p>
+      <p>基于 <a href="https://github.com/mebjas/html5-qrcode" target="_blank" rel="noopener">html5-qrcode</a> 与 jsQR</p>
+    </footer>
+  </div>
+
+  <!-- 结果卡片模板 -->
+  <template id="resultCardTpl">
+    <div class="result-card">
+      <div class="result-meta">
+        <span class="result-time"></span>
+        <span class="result-source"></span>
+      </div>
+      <div class="result-content"></div>
+      <div class="result-actions">
+        <button class="btn secondary small copy-btn">复制</button>
+        <a class="btn secondary small open-btn" target="_blank" rel="noopener" style="display:none;">打开链接</a>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
