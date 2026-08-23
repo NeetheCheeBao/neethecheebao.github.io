@@ -1,0 +1,16 @@
+{
+  "name": "本机验证器",
+  "short_name": "验证器",
+  "description": "纯前端 TOTP / 2FA 生成器",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

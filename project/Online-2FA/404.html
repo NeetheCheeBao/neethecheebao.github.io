@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirect</title>
+    <script>
+      (function () {
+        var parts = location.pathname.split("/").filter(Boolean);
+        var sIndex = parts.lastIndexOf("s");
+        var secret = sIndex >= 0 && parts[sIndex + 1] ? parts[sIndex + 1] : "";
+        var baseParts = sIndex >= 0 ? parts.slice(0, sIndex) : [];
+        var base = "/" + (baseParts.length ? baseParts.join("/") + "/" : "");
+        var q = secret ? ("?secret=" + encodeURIComponent(secret)) : "";
+        location.replace(base + q + location.hash);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting…</p>
+  </body>
+</html>
