@@ -1,7 +1,7 @@
 (function () {
   const I18N = {
     zh: {
-      brand: "本机验证器",
+      brand: "在线2FA计算 - NeetheCheeBao",
       tagline: "密钥只在浏览器里计算，不会上传",
       tabQuick: "即时生成",
       tabVault: "令牌库",
@@ -59,7 +59,7 @@
       qrTitle: "验证二维码",
       qrHint: "用 Google Authenticator 等 App 扫描，核对生成的数字是否一致。",
       insecure: "当前页面不是安全上下文，Web Crypto 不可用。请通过 HTTPS（例如 GitHub Pages）访问。",
-      footer: "RFC 6238 · 纯前端 · 可离线",
+      footer: "Copyright 2026 NeetheCheeBao",
       saved: "已保存",
       imported: "导入完成",
       importError: "无法解析该文件",
@@ -144,7 +144,7 @@
       qrTitle: "Verify with QR",
       qrHint: "Scan with Google Authenticator (or similar) and compare the digits.",
       insecure: "This page is not a secure context. Open it over HTTPS (GitHub Pages).",
-      footer: "RFC 6238 · client-side · works offline",
+      footer: "Copyright 2026 NeetheCheeBao",
       saved: "Saved",
       imported: "Import complete",
       importError: "Could not parse that file",
