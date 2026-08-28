@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastYX - 快速优选生成</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>FastYX - 快速优选生成</h1>
+        
+        <div class="form-group">
+            <label for="domains">域名列表（一行一个）：</label>
+            <textarea id="domains" placeholder="例如：
+www.visa.cn
+mfa.gov.ua"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="ports">端口列表（逗号分隔）：</label>
+            <input type="text" id="ports" value="443, 2053, 2083, 2087, 2096, 8443">
+        </div>
+
+        <div class="form-group">
+            <label>名称生成方式：</label>
+            <div class="radio-group">
+                <label><input type="radio" name="nameType" value="domainPort" checked> 域名名称 + 端口号</label>
+                <label><input type="radio" name="nameType" value="prefixIndex"> "优选域名" + 序号</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>输出格式：</label>
+            <div class="radio-group">
+                <label><input type="radio" name="outputType" value="newline" checked> 一行一个</label>
+                <label><input type="radio" name="outputType" value="custom"> 自定义分隔符</label>
+            </div>
+            <input type="text" id="customSeparator" value="," placeholder="输入分隔符，默认为逗号" style="display: none; margin-top: 8px;">
+        </div>
+
+        <button id="generateBtn">生成配置</button>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="output">输出结果：</label>
+            <textarea id="output" readonly></textarea>
+        </div>
+        <button id="copyBtn">复制结果</button>
+    </div>
+
+    <script>
+        const outputTypeRadios = document.querySelectorAll('input[name="outputType"]');
+        const customSeparatorInput = document.getElementById('customSeparator');
+
+        outputTypeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (document.querySelector('input[name="outputType"]:checked').value === 'custom') {
+                    customSeparatorInput.style.display = 'block';
+                } else {
+                    customSeparatorInput.style.display = 'none';
+                }
+            });
+        });
+
+        function extractCoreName(domain) {
+            let clean = domain.trim().toLowerCase();
+            if (clean.startsWith('www.')) clean = clean.slice(4);
+            const parts = clean.split('.');
+            const tlds = ['com', 'cn', 'org', 'net', 'xyz', 'top', 'fan', 'vip', 'tk', 'ltd', 'id', 'mn', 'ua', 'hk', 'tw', 'is', 'eu', 'gov'];
+            const filtered = parts.filter(p => !tlds.includes(p));
+            return filtered.join('') || parts[0];
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const rawDomains = document.getElementById('domains').value.split('\n').map(d => d.trim()).filter(d => d);
+            const rawPorts = document.getElementById('ports').value.split(',').map(p => p.trim()).filter(p => p);
+            const nameType = document.querySelector('input[name="nameType"]:checked').value;
+            const outputType = document.querySelector('input[name="outputType"]:checked').value;
+            const customSep = customSeparatorInput.value || ',';
+
+            let results = [];
+            let globalIndex = 1;
+
+            rawDomains.forEach(domain => {
+                const coreName = extractCoreName(domain);
+                rawPorts.forEach(port => {
+                    let tag = '';
+                    if (nameType === 'domainPort') {
+                        tag = `${coreName}${port}`;
+                    } else {
+                        tag = `优选域名${globalIndex}`;
+                        globalIndex++;
+                    }
+                    results.push(`${domain}:${port}#${tag}`);
+                });
+            });
+
+            const finalOutput = outputType === 'newline' ? results.join('\n') : results.join(customSep);
+            document.getElementById('output').value = finalOutput;
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const outputTextarea = document.getElementById('output');
+            if (!outputTextarea.value) return;
+            outputTextarea.select();
+            navigator.clipboard.writeText(outputTextarea.value).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.innerText;
+                btn.innerText = '已复制！';
+                setTimeout(() => btn.innerText = originalText, 1500);
+            });
+        });
+    </script>
+</body>
+</html>
