@@ -665,7 +665,7 @@
   }
 
   function initTheme() {
-    const saved = localStorage.getItem("netpulse-theme");
+    const saved = localStorage.getItem("netmon-theme");
     const theme =
       saved ||
       (window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -678,7 +678,7 @@
     const cur = document.documentElement.getAttribute("data-theme");
     const next = cur === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("netpulse-theme", next);
+    localStorage.setItem("netmon-theme", next);
   }
 
   el.ipGrid.addEventListener("click", async (e) => {
