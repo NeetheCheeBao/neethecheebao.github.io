@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="NetPulse — 实时检测当前网络出口 IP 与站点延迟，切换节点立刻可见。" />
+  <meta name="theme-color" content="#F6821F" />
+  <title>NetPulse · 当前网络信息</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Oxanium:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-text">
+        <p class="eyebrow">NetPulse</p>
+        <h1>当前网络信息</h1>
+        <p class="subtitle">在浏览器里探测四条出口与八条站点延迟。切换代理节点后，IP 与延迟会自动刷新。</p>
+      </div>
+      <div class="header-actions">
+        <span class="status-chip" id="status-chip">
+          <span class="live-dot" id="live-dot"></span>
+          <span id="status-label">实时检测</span>
+          <span class="mono subtle" id="updated-at"></span>
+        </span>
+        <button type="button" class="btn icon" id="btn-pause" title="暂停 / 继续" aria-label="暂停">⏸</button>
+        <button type="button" class="btn icon" id="btn-refresh" title="立即刷新" aria-label="立即刷新">↻</button>
+        <button type="button" class="btn icon" id="btn-theme" title="切换主题" aria-label="切换主题">◐</button>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">◎</div>
+        <div>
+          <h2>当前网络信息</h2>
+          <p class="muted" id="panel-meta">加载中…</p>
+        </div>
+      </div>
+
+      <div class="ip-grid" id="ip-grid"></div>
+      <div class="latency-grid" id="latency-grid"></div>
+    </section>
+
+    <div class="lower">
+      <section class="card">
+        <h3>四条出口分别看什么</h3>
+        <ul class="tips">
+          <li><strong>国内测试</strong> — 走中国站点（speedtest.cn / ipip），通常是直连 ISP。</li>
+          <li><strong>国外测试</strong> — 未被墙的境外站点，规则里常叫「漏网之鱼」。</li>
+          <li><strong>Cloudflare ProxyIP</strong> — 访问 CF CDN 时的落地 IP。</li>
+          <li><strong>墙外测试 X.com</strong> — 访问 X 的路径，切换节点时最容易变。</li>
+        </ul>
+        <div class="legend" id="legend"></div>
+      </section>
+      <section class="card">
+        <h3>出口变化</h3>
+        <p class="muted small">切换节点后，新旧 IP 会记在这里。</p>
+        <ol class="log" id="change-log">
+          <li class="empty">还没有变化。换一条代理节点，等几秒即可。</li>
+        </ol>
+      </section>
+    </div>
+
+    <footer class="footer">
+      纯前端检测，请求从你的浏览器发出，因此测到的是你当前节点。
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <div class="modal" id="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" role="dialog" aria-labelledby="modal-title">
+      <button type="button" class="modal-close" data-close aria-label="关闭">×</button>
+      <h2 id="modal-title">IP 详情</h2>
+      <p class="muted" id="modal-ip">—</p>
+      <dl class="detail-list" id="modal-body"></dl>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
