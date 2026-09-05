@@ -34,7 +34,7 @@
 <h1>图片混淆</h1>
 <div style="display: inline-block; max-width: 400px;">基于空间填充曲线的新一代图片混淆。混淆算法保持像素的空间相关性，混淆图被压缩仍能保持色彩。仅供技术交流使用。此程序生成的图片格式为jpeg，质量1。</div>
 <div>​</div>
-<div><span class="normal_button" style="background-color: #180161;color:#fff;">选择图片<input type="file" accept="image/*" id="ipt" class="ipt_btn"></span><button id="enc" class="normal_button" style="background-color: #4f1787;color:#fff;">混淆</button><button id="dec" class="normal_button" style="background-color: #eb3678;color:#fff;">解混淆</button><button id="re" class="normal_button" style="background-color: #fb773c;color:#fff;">还原</button><button id="download" class="normal_button" style="background-color: #3c8bfb;color:#fff;">下载</button><button id="clipboard" class="normal_button" style="background-color: #20a060;color:#fff;">下载到剪贴板</button><button id="home" class="normal_button" style="background-color: #d4a017;color:#fff;" onclick="location.href='https://neethecheebao.github.io/';">返回首页</button></div>
+<div><span class="normal_button" style="background-color: #180161;color:#fff;">选择图片<input type="file" accept="image/*" id="ipt" class="ipt_btn"></span><button id="enc" class="normal_button" style="background-color: #4f1787;color:#fff;">混淆</button><button id="dec" class="normal_button" style="background-color: #eb3678;color:#fff;">解混淆</button><button id="re" class="normal_button" style="background-color: #fb773c;color:#fff;">还原</button><button id="download" class="normal_button" style="background-color: #3c8bfb;color:#fff;">下载</button></div>
 <div>​</div>
 <div><img id="display-img" style="max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); display: none;"></div>
 </div>
@@ -169,36 +169,6 @@ function decrypt(img){
     //})
 }
 const ipt = document.getElementById("ipt")
-
-// 支持拖拽导入图片
-function loadFile(file){
-    if(file && file.type.startsWith("image/")){
-        setsrc(URL.createObjectURL(file))
-    }
-}
-
-document.addEventListener("dragover", e => {
-    e.preventDefault()
-})
-
-document.addEventListener("drop", e => {
-    e.preventDefault()
-    if(e.dataTransfer.files.length > 0){
-        loadFile(e.dataTransfer.files[0])
-    }
-})
-
-// 支持粘贴剪贴板图片
-document.addEventListener("paste", e => {
-    const items = e.clipboardData && e.clipboardData.items
-    if(!items) return
-    for(const item of items){
-        if(item.type.startsWith("image/")){
-            loadFile(item.getAsFile())
-            break
-        }
-    }
-})
 ipt.onchange = () => {
     if(ipt.files.length > 0){
         setsrc(URL.createObjectURL(ipt.files[0]))
@@ -242,22 +212,6 @@ btn_download.onclick = () => {
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
-    }
-}
-
-const btn_clipboard = document.getElementById("clipboard")
-btn_clipboard.onclick = async () => {
-    if(img.src && img.style.display !== "none"){
-        try{
-            const response = await fetch(img.src)
-            const blob = await response.blob()
-            await navigator.clipboard.write([
-                new ClipboardItem({"image/jpeg": blob})
-            ])
-            alert("图片已复制到剪贴板")
-        }catch(e){
-            alert("复制失败，请检查浏览器剪贴板权限")
-        }
     }
 }
 </script>
