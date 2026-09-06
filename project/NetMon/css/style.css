@@ -277,7 +277,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .latency-card {
   position: relative;
-  min-height: 5.25rem;
+  min-height: 5rem;
   overflow: hidden;
   border-radius: 10px;
   background: var(--bg);
@@ -292,7 +292,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .latency-bg {
   position: absolute;
   inset: 0;
-  opacity: 0.25;
+  opacity: 0.35;
   pointer-events: none;
 }
 .latency-bg .grid {
@@ -550,3 +550,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* cf.090227 style sparkline refinement */
+.latency-bg svg path:nth-child(2){filter:drop-shadow(0 1px 1px rgba(0,0,0,.08));}
+.latency-card .latency-value{font-variant-numeric:tabular-nums;}

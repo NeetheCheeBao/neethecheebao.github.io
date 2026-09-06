@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const SAMPLE_COUNT = 16;
+  const SAMPLE_COUNT = 40;
   const LATENCY_INTERVAL_MS = 1236;
   const IP_INTERVAL_MS = 8000;
   const FETCH_MS = 8000;
@@ -102,7 +102,7 @@
     ips: Object.fromEntries(
       IP_SOURCES.map((s) => [s.id, { status: "loading", data: null, error: null }]),
     ),
-    samples: Object.fromEntries(LATENCY_SITES.map((s) => [s.id, []])),
+    samples: Object.fromEntries(LATENCY_SITES.map((s) => [s.id, Array(SAMPLE_COUNT).fill(0)])),
     log: [],
     logId: 0,
     updatedAt: null,
@@ -359,9 +359,9 @@
   }
 
   function buildEcgPath(samples, width = 400, height = 60) {
-    if (!samples.length) return `M0,${height / 2} L${width},${height / 2}`;
+    if (!samples.length) samples = Array(SAMPLE_COUNT).fill(0);
     const pad = 8;
-    const step = samples.length === 1 ? 0 : width / (SAMPLE_COUNT - 1);
+    const step = width / (SAMPLE_COUNT - 1);
     const points = samples.map((l, i) => {
       const x = i * step;
       const y =
@@ -382,10 +382,10 @@
   }
 
   function lastPoint(samples, width = 400, height = 60) {
-    if (!samples.length) return { x: 0, y: height / 2 };
+    if (!samples.length) samples = Array(SAMPLE_COUNT).fill(0);
     const pad = 8;
-    const step = samples.length === 1 ? 0 : width / (SAMPLE_COUNT - 1);
-    const i = samples.length - 1;
+    const step = width / (SAMPLE_COUNT - 1);
+    const i = SAMPLE_COUNT - 1;
     const l = samples[i];
     return {
       x: i * step,
@@ -621,8 +621,9 @@
       })),
     );
     for (const { id, ms } of results) {
-      const list = [...(state.samples[id] || []), ms];
-      if (list.length > SAMPLE_COUNT) list.shift();
+      const list = [...(state.samples[id] || Array(SAMPLE_COUNT).fill(0))];
+      list.shift();
+      list.push(ms);
       state.samples[id] = list;
     }
     renderLatency();
