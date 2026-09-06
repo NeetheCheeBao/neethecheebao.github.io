@@ -300,30 +300,35 @@
   }
 
   async function pingUrl(url) {
-    const run = async (method) => {
-      const { signal, cancel } = withTimeout(PING_MS);
-      const start = performance.now();
-      try {
-        await fetch(bust(url), {
-          method,
-          cache: "no-store",
-          mode: "no-cors",
-          referrerPolicy: "no-referrer",
-          signal,
-        });
-        return Math.round(performance.now() - start);
-      } finally {
-        cancel();
-      }
-    };
+    // 多次采样取平均，避免浏览器缓存/连接复用造成虚假的极低延迟
+    const samples = [];
+    for (let i = 0; i < 3; i++) {
+      const value = await singlePing(url);
+      if (value >= 0) samples.push(value);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+    if (!samples.length) return -1;
+    samples.sort((a, b) => a - b);
+    const trimmed = samples.length > 2 ? samples.slice(1) : samples;
+    return Math.round(trimmed.reduce((a, b) => a + b, 0) / trimmed.length);
+  }
+
+  async function singlePing(url) {
+    const { signal, cancel } = withTimeout(PING_MS);
+    const start = performance.now();
     try {
-      return await run("GET");
+      await fetch(bust(url), {
+        method: "GET",
+        cache: "no-store",
+        mode: "no-cors",
+        referrerPolicy: "no-referrer",
+        signal,
+      });
+      return Math.round(performance.now() - start);
     } catch {
-      try {
-        return await run("HEAD");
-      } catch {
-        return pingImage(url);
-      }
+      return -1;
+    } finally {
+      cancel();
     }
   }
 
