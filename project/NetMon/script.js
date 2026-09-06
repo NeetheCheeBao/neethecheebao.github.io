@@ -1,5 +1,8 @@
 const SAMPLE_COUNT = 14;
-const LATENCY_INTERVAL = 2400;
+const LATENCY_INTERVAL = 1000; // 正常采样间隔：1秒
+const BURST_INTERVAL = 200; // 快速采样间隔：0.2秒
+const BURST_DURATION = 3000; // 快速采样持续：3秒
+const BURST_EVERY = 30000; // 每30秒再进行一轮快速采样
 const EXIT_INTERVAL = 8000;
 const TIMEOUT_MS = 5000;
 
@@ -354,7 +357,42 @@ function init() {
     document.getElementById("live-time").textContent = formatElapsed(state.elapsed);
   }, 1000);
   setInterval(() => { if (!state.paused) refreshExits(); }, EXIT_INTERVAL);
-  setInterval(() => { if (!state.paused) refreshLatency(); }, LATENCY_INTERVAL);
+
+  // 延迟采样调度：
+  // 1. 页面首次进入：连续3秒，每0.2秒采样一次
+  // 2. 之后：每1秒正常采样
+  // 3. 每30秒：插入一轮3秒快速采样
+  let latencyTimer = null;
+  let burstTimer = null;
+  let burstRunning = false;
+
+  const runBurst = () => {
+    if (state.paused || burstRunning) return;
+    burstRunning = true;
+
+    const endAt = Date.now() + BURST_DURATION;
+    refreshLatency();
+    latencyTimer = setInterval(() => {
+      if (!state.paused) refreshLatency();
+      if (Date.now() >= endAt) {
+        clearInterval(latencyTimer);
+        latencyTimer = null;
+        burstRunning = false;
+      }
+    }, BURST_INTERVAL);
+  };
+
+  const startLatencySchedule = () => {
+    runBurst();
+    setTimeout(() => {
+      setInterval(() => {
+        if (!state.paused && !burstRunning) refreshLatency();
+      }, LATENCY_INTERVAL);
+    }, BURST_DURATION);
+    burstTimer = setInterval(runBurst, BURST_EVERY);
+  };
+
+  startLatencySchedule();
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
