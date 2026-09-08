@@ -13,8 +13,8 @@
         <div class="form-group">
             <label for="domains">域名列表（一行一个）：</label>
             <textarea id="domains" placeholder="例如：
-www.visa.cn
-time.is"></textarea>
+www.examples.com
+examples.com"></textarea>
         </div>
 
         <div class="form-group">
@@ -26,7 +26,7 @@ time.is"></textarea>
             <label>名称生成方式：</label>
             <div class="radio-group">
                 <label><input type="radio" name="nameType" value="domainPort" checked> 域名名称 + 端口号</label>
-                <label><input type="radio" name="nameType" value="prefixIndex"> "优选域名" + 序号</label>
+                <label><input type="radio" name="nameType" value="prefixIndex"> "神秘优选" + 序号</label>
             </div>
         </div>
 
@@ -88,7 +88,7 @@ time.is"></textarea>
                     if (nameType === 'domainPort') {
                         tag = `${coreName}${port}`;
                     } else {
-                        tag = `优选域名${globalIndex}`;
+                        tag = `神秘优选${globalIndex}`;
                         globalIndex++;
                     }
                     results.push(`${domain}:${port}#${tag}`);
