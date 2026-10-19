@@ -146,6 +146,15 @@
                     <!-- 卡片由 script.js 动态生成 -->
                 </div>
             </div>
+
+            <!-- 出口变化：脚本后台轮询四条出口的 IP，发现变化即记录新旧值 -->
+            <section class="change-panel" id="exit-changes" aria-labelledby="change-title">
+                <h3 class="section-title" id="change-title">🔀 出口变化</h3>
+                <p class="section-subtitle">切换代理节点后，这里会记下每条出口的新旧 IP，用来确认线路是否真的换了。最多保留 20 条，最新的在最上面。</p>
+                <div class="change-list" id="change-list" aria-live="polite">
+                    <p class="change-empty">还没有变化。换一条代理节点，等几秒即可。</p>
+                </div>
+            </section>
         </div>
     </div>
 

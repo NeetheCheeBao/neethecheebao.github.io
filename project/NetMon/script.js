@@ -891,6 +891,14 @@ async function raceIpProbeSources(sourceConfigs, label) {
 //   科赋锐科技₃ -> https://www.cf-ns.net/cdn-cgi/trace
 //   科赋锐科技₄ -> https://www.cf-ns.tech/cdn-cgi/trace
 // ============================================================
+// 国内测试的四条 trace 源（首屏探测与「出口变化」监测共用同一份定义）
+const IPIP_TRACE_SOURCES = [
+    { type: 'trace', name: '科赋锐科技₁', url: 'https://api.cloudflare-cn.com/cdn-cgi/trace' },
+    { type: 'trace', name: '科赋锐科技₂', url: 'https://www.cf-ns.com/cdn-cgi/trace' },
+    { type: 'trace', name: '科赋锐科技₃', url: 'https://www.cf-ns.net/cdn-cgi/trace' },
+    { type: 'trace', name: '科赋锐科技₄', url: 'https://www.cf-ns.tech/cdn-cgi/trace' }
+];
+
 async function fetchIpipData() {
     setStatus('status-ipip', 'loading');
 
@@ -898,12 +906,7 @@ async function fetchIpipData() {
     const subtitleElement = document.getElementById('ipip-subtitle')
         || document.querySelector('#status-ipip').parentElement.querySelector('.title-subtitle');
 
-    const testSources = [
-        { type: 'trace', name: '科赋锐科技₁', url: 'https://api.cloudflare-cn.com/cdn-cgi/trace' },
-        { type: 'trace', name: '科赋锐科技₂', url: 'https://www.cf-ns.com/cdn-cgi/trace' },
-        { type: 'trace', name: '科赋锐科技₃', url: 'https://www.cf-ns.net/cdn-cgi/trace' },
-        { type: 'trace', name: '科赋锐科技₄', url: 'https://www.cf-ns.tech/cdn-cgi/trace' }
-    ];
+    const testSources = IPIP_TRACE_SOURCES;
 
     let fastestSuccess;
     try {
@@ -1703,6 +1706,8 @@ function toggleNetworkPrivacy(event) {
     if (event) event.stopPropagation();
     networkPrivacyVisible = !networkPrivacyVisible;
     refreshAllNetworkFieldDisplays(true);
+    // 出口变化记录与卡片保持同一套脱敏口径
+    renderExitChanges();
 }
 
 /**
@@ -3341,3 +3346,173 @@ if (document.readyState === 'loading') {
 } else {
     startLatencyTest();
 }
+
+// ============================================================
+// 出口变化记录
+//   四条出口（国内 / 国外 / CloudFlare / 墙外）各自后台轮询一次 IP，
+//   与上一轮比对：变了就往「出口变化」面板里记一条「旧值 → 新值」。
+//   只做探测与比对，命中变化后才刷新对应卡片，避免每轮重绘整页。
+//   首轮只建立基线（不产生记录），页面隐藏时暂停轮询。
+// ============================================================
+
+/** 出口 IP 轮询间隔（毫秒）：比延迟采样慢一档，够用且不打扰接口 */
+const EXIT_WATCH_INTERVAL_MS = 10000;
+/** 单次出口探测超时（毫秒） */
+const EXIT_WATCH_TIMEOUT_MS = 6000;
+/** 变化记录最多保留条数 */
+const EXIT_CHANGE_LIMIT = 20;
+
+/** 国内出口：四条 trace 源竞速，取跑赢的那条 */
+async function probeExitIpip() {
+    const winner = await raceIpProbeSources(IPIP_TRACE_SOURCES, '出口变化');
+    return String(winner.requestIp || '').trim();
+}
+
+/** 国外出口：接口响应自带 ip 字段 */
+async function probeExitOverseas() {
+    const response = await fetchWithTimeout(
+        `https://api.cmliussss.net/api/ipinfo?_t=${Date.now()}`,
+        { cache: 'no-store' },
+        EXIT_WATCH_TIMEOUT_MS
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return String(data && data.ip || '').trim();
+}
+
+/** CloudFlare 出口：固定取 IPv4 端点，与卡片默认展示的出口保持一致 */
+async function probeExitCloudFlare() {
+    const response = await fetchWithTimeout(
+        `https://ipv4.090227.xyz/ip.json?_t=${Date.now()}`,
+        { cache: 'no-store' },
+        EXIT_WATCH_TIMEOUT_MS
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const ip = String(data && data.ip || '').trim();
+    if (!isValidIpv4(ip)) throw new Error('invalid ip payload');
+    return ip;
+}
+
+/** 墙外出口：读 X 的 trace，取 ip= 行（与卡片默认展示的推特源一致） */
+async function probeExitTwitter() {
+    const response = await fetchWithTimeout(
+        `https://help.x.com/cdn-cgi/trace?_t=${Date.now()}`,
+        { cache: 'no-store' },
+        EXIT_WATCH_TIMEOUT_MS
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const ip = parseTraceField(await response.text(), 'ip');
+    if (isInvalidOutsideEntryIp(ip)) throw new Error('invalid ip payload');
+    return ip;
+}
+
+/**
+ * 四条出口的监测配置。
+ * refresh 指向首屏那套完整取数函数：发现变化后重跑一次，卡片、地址、国旗角标一起更新。
+ */
+const EXIT_WATCH_TARGETS = [
+    { id: 'ipip', name: '国内测试', probe: probeExitIpip, refresh: fetchIpipData },
+    { id: 'overseas', name: '国外测试', probe: probeExitOverseas, refresh: fetchEdgeOneData },
+    { id: 'cloudflare', name: 'CloudFlare', probe: probeExitCloudFlare, refresh: fetchCloudFlareData },
+    { id: 'twitter', name: '墙外测试', probe: probeExitTwitter, refresh: fetchTwitterData }
+];
+
+/** 变化记录（新的在前） */
+const exitChangeLog = [];
+/** 各出口上一轮的 IP，用作比对基线 */
+const exitIpBaseline = Object.create(null);
+
+/** 时间戳（HH:MM:SS） */
+function formatChangeTime(date) {
+    return date.toLocaleTimeString('zh-CN', { hour12: false });
+}
+
+/** 渲染「出口变化」面板：默认跟随卡片的隐私开关，脱敏时只露首段 */
+function renderExitChanges() {
+    const list = document.getElementById('change-list');
+    if (!list) return;
+
+    if (!exitChangeLog.length) {
+        list.innerHTML = '<p class="change-empty">还没有变化。换一条代理节点，等几秒即可。</p>';
+        return;
+    }
+
+    list.innerHTML = exitChangeLog.map(item => {
+        const from = networkPrivacyVisible ? item.from : maskNetworkIpValue(item.from);
+        const to = networkPrivacyVisible ? item.to : maskNetworkIpValue(item.to);
+        return `<div class="change-row">
+            <time class="change-time">${escapeHtml(item.time)}</time>
+            <span class="change-name">${escapeHtml(item.name)}</span>
+            <span class="change-ips"><span class="from">${escapeHtml(from)}</span><span class="arrow">→</span><span class="to">${escapeHtml(to)}</span></span>
+        </div>`;
+    }).join('');
+}
+
+/** 记一条出口变化 */
+function recordExitChange(name, from, to) {
+    exitChangeLog.unshift({ time: formatChangeTime(new Date()), name, from, to });
+    if (exitChangeLog.length > EXIT_CHANGE_LIMIT) {
+        exitChangeLog.length = EXIT_CHANGE_LIMIT;
+    }
+    renderExitChanges();
+}
+
+let exitWatchRunning = false;
+
+/**
+ * 跑一轮出口比对。
+ * 每个出口独立探测：失败即跳过本轮（保留基线，下次再比），不影响其它出口。
+ */
+async function watchExitChanges() {
+    if (exitWatchRunning || document.hidden) return;
+    exitWatchRunning = true;
+
+    try {
+        await Promise.all(EXIT_WATCH_TARGETS.map(async target => {
+            let ip = '';
+            try {
+                ip = String(await target.probe() || '').trim();
+            } catch (error) {
+                return;
+            }
+            if (!ip) return;
+
+            const baseline = exitIpBaseline[target.id];
+            // 首轮只记基线，不产生「变化」
+            if (!baseline) {
+                exitIpBaseline[target.id] = ip;
+                return;
+            }
+            if (baseline === ip) return;
+
+            exitIpBaseline[target.id] = ip;
+            recordExitChange(target.name, baseline, ip);
+
+            // 出口确实变了：重跑该出口的完整取数，让卡片与记录保持一致
+            if (typeof target.refresh === 'function') {
+                Promise.resolve()
+                    .then(() => target.refresh())
+                    .catch(error => console.log(`[出口变化] ${target.name} 卡片刷新失败:`, error));
+            }
+        }));
+    } finally {
+        exitWatchRunning = false;
+    }
+}
+
+// 首屏四条出口就绪后再开始比对（延迟 3 秒，避免把首屏加载当成一次变化）
+(function bootstrapExitWatcher() {
+    const start = () => {
+        watchExitChanges();
+        setInterval(() => {
+            if (!document.hidden) watchExitChanges();
+        }, EXIT_WATCH_INTERVAL_MS);
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(start, 3000));
+    } else {
+        setTimeout(start, 3000);
+    }
+})();

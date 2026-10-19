@@ -2886,3 +2886,154 @@ body {
   font-size: 1.1em;
   line-height: 1;
 }
+
+/* ==========================================================================
+   出口变化：出口 IP 变动记录
+   —— 与 .port-info 同款卡片，列表按时间倒序，最多 20 条
+   ========================================================================== */
+
+.change-panel {
+  background: var(--card-bg);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.change-panel .section-title {
+  font-size: 1.1rem;
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.change-panel .section-subtitle {
+  margin: 0 0 var(--space-4);
+  font-size: 0.85rem;
+}
+
+.change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* 超过 6 条后列表内滚动，卡片高度不再增长 */
+  max-height: 246px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.change-empty {
+  padding: 10px 2px;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+
+.change-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-color);
+  font-size: 0.85rem;
+  animation: changeRowIn var(--transition-base);
+}
+
+@keyframes changeRowIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.change-time {
+  flex: none;
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.change-name {
+  flex: none;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+/* IP 段右对齐：新旧值用等宽字体，箭头用主色，一眼能看出换了什么 */
+.change-ips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  min-width: 0;
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.change-ips .from {
+  color: var(--text-color-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.change-ips .arrow {
+  flex: none;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.change-ips .to {
+  color: var(--text-color);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 窄屏改成两行：时间 + 出口名一行，新旧 IP 独占一行，避免长 IP 被截断 */
+@media (max-width: 768px) {
+  .change-panel {
+    padding: 12px;
+  }
+
+  .change-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 5px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .change-time {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 0.72rem;
+  }
+
+  .change-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .change-ips {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-left: 0;
+    font-size: 0.75rem;
+  }
+
+  .change-list {
+    max-height: 200px;
+  }
+}
