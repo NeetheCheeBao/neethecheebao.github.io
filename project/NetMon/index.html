@@ -4,144 +4,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="在浏览器里探测四条出口与八条站点延迟。切换代理节点后，IP 与延迟会自动刷新。">
-    <meta name="keywords" content="CloudFlare,优选域名,CDN,优选IP">
+    <meta name="description" content="在线网络监测面板：实时检测当前出口 IP 与国内外站点延迟">
     <title>在线网络监测面板 - NeetheCheeBao</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%f0%9f%8c%8d</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&family=Orbitron:wght@700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+</head>
 
 <body>
-    <button id="theme-switcher" aria-label="切换主题">
-        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-    </button>
+    <!-- 视觉隐藏的 H1：保住文档大纲与 SEO 语义，站点标识由粘性导航品牌位承担 -->
+    <h1 class="sr-only">在线网络监测面板 — 实时出口 IP 与站点延迟检测</h1>
 
-    <div class="header">
-        <h1>Online Network Monitoring Panel</h1>
-        <p>在线网络监测面板</p>
-    </div>
+    <!-- 顶部粘性导航：品牌 + 主题切换 -->
+    <nav class="top-nav" id="top" aria-label="站点导航">
+        <span class="nav-brand"><span class="brand-emoji" aria-hidden="true">🌍</span>在线网络监测面板</span>
+
+        <button id="theme-switcher" aria-label="切换主题">
+            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </nav>
 
     <div class="container">
-        <!-- 网络出口信息 -->
-        <div class="port-info">
-            <h3>🌍 当前网络信息</h3>
-            <div class="network-cards-container">
-                <div class="network-card">
-                    <div class="network-card-title">
-                        <span class="status-indicator" id="status-ipip"></span>
-                        <span>国内测试<span class="network-card-subtitle">speedtest.cn</span></span>
-                    </div>
-                    <div class="network-info-content">
-                        <span id="ipip-ip" class="ip-text">加载中...</span>
-                        <div class="location-text">
-                            <span id="ipip-country" class="country-text">-</span>
-                            <span id="ipip-city" class="city-text">-</span>
+        <div class="page" data-page="network">
+            <!-- 网络出口信息 -->
+            <div class="port-info" id="network">
+                <h3 class="section-title">🌍 当前网络信息</h3>
+                <p class="section-subtitle">实时检测您当前的出口 IP 与国内外连通性质量，支持 IP 隐私脱敏；点击 IP 可查看归属与风险详情，下方卡片为常用站点的实时延迟监测。</p>
+                <div class="network-cards-container">
+                    <div class="network-card">
+                        <div class="network-card-title">
+                            <span class="status-indicator" id="status-ipip"></span>
+                            <div class="title-text">
+                                <div class="title-main">国内测试</div>
+                                <div class="title-subtitle" id="ipip-subtitle"></div>
+                            </div>
                         </div>
-                        <div class="network-tip">· 您访问国内网站所使用的IP</div>
+                        <div class="network-info-content">
+                            <span id="ipip-ip" class="ip-text">加载中...</span>
+                            <div class="location-text">
+                                <span id="ipip-country" class="country-text">-</span>
+                            </div>
+                            <div class="network-tip">· 您访问国内站点所使用的IP</div>
+                        </div>
+                    </div>
+
+                    <div class="network-card">
+                        <div class="network-card-title">
+                            <span class="status-indicator" id="status-overseas"></span>
+                            <div class="title-text">
+                                <div class="title-main">国外测试</div>
+                                <div class="title-subtitle" id="overseas-subtitle">漏网之鱼</div>
+                            </div>
+                        </div>
+                        <div class="network-info-content">
+                            <span id="overseas-ip" class="ip-text">加载中...</span>
+                            <div class="location-text">
+                                <span id="overseas-country" class="country-text">-</span>
+                            </div>
+                            <div class="network-tip">· 您访问没有被封的国外站点所使用的IP</div>
+                        </div>
+                    </div>
+
+                    <div class="network-card">
+                        <div class="network-card-title">
+                            <span class="status-indicator" id="status-cf"></span>
+                            <div class="title-text">
+                                <div class="title-main">CloudFlare</div>
+                                <div class="title-subtitle" id="cf-subtitle">ProxyIP</div>
+                            </div>
+                        </div>
+                        <div class="network-info-content">
+                            <span id="cf-ip" class="ip-text">加载中...</span>
+                            <div class="location-text">
+                                <span id="cf-country" class="country-text">-</span>
+                            </div>
+                            <div class="network-tip">· 您访问CFCDN站点所使用的落地IP</div>
+                        </div>
+                    </div>
+
+                    <div class="network-card">
+                        <div class="network-card-title">
+                            <span class="status-indicator" id="status-twitter"></span>
+                            <div class="title-text">
+                                <div class="title-main">墙外测试</div>
+                                <div class="title-subtitle" id="twitter-subtitle"><span
+                                        class="subtitle-full"><span
+                                            class="tw-subtitle-twitter cf-subtitle-switch" data-tw-target-index="0"
+                                            role="button" tabindex="0">推特(X.com)</span><span
+                                            class="cf-subtitle-sep"> / </span><span
+                                            class="tw-subtitle-google cf-subtitle-switch"
+                                            data-tw-target-index="1">谷歌(Google)</span></span><span
+                                        class="subtitle-compact"><span
+                                            class="tw-subtitle-twitter cf-subtitle-switch" data-tw-target-index="0"
+                                            role="button" tabindex="0">X</span><span
+                                            class="cf-subtitle-sep"> / </span><span
+                                            class="tw-subtitle-google cf-subtitle-switch" data-tw-target-index="1"
+                                            role="button" tabindex="0">谷歌</span></span></div>
+                            </div>
+                        </div>
+                        <div class="network-info-content">
+                            <span id="twitter-ip" class="ip-text">加载中...</span>
+                            <div class="location-text">
+                                <span id="twitter-country" class="country-text">-</span>
+                            </div>
+                            <div class="network-tip" id="twitter-tip">· 您访问墙外站点所使用的IP</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="network-card">
-                    <div class="network-card-title">
-                        <span class="status-indicator" id="status-edgeone"></span>
-                        <span>国外测试<span class="network-card-subtitle">漏网之鱼</span></span>
-                    </div>
-                    <div class="network-info-content">
-                        <span id="edgeone-ip" class="ip-text">加载中...</span>
-                        <div class="location-text">
-                            <span id="edgeone-country" class="country-text">-</span>
-                            <span id="edgeone-city" class="city-text">-</span>
-                        </div>
-                        <div class="network-tip">· 您访问没有被封的国外网站所使用的IP</div>
-                    </div>
+                <!-- 延迟分区行（移动端紧凑形态显示，桌面隐藏；色条图例与卡片左缘色条呼应） -->
+                <div class="latency-head">
+                    <span class="latency-head-title">⏱ 延迟测试</span>
+                    <span class="lat-legend">
+                        <span class="lat-legend-item"><span class="lat-legend-dot domestic"></span>国内</span>
+                        <span class="lat-legend-item"><span class="lat-legend-dot international"></span>国际</span>
+                    </span>
                 </div>
 
-                <div class="network-card">
-                    <div class="network-card-title">
-                        <span class="status-indicator" id="status-cf"></span>
-                        <span>CloudFlare<span class="network-card-subtitle">ProxyIP</span></span>
-                    </div>
-                    <div class="network-info-content">
-                        <span id="cf-ip" class="ip-text">加载中...</span>
-                        <div class="location-text">
-                            <span id="cf-country" class="country-text">-</span>
-                            <span id="cf-city" class="city-text">-</span>
-                        </div>
-                        <div class="network-tip">· 您访问CFCDN网站所使用的落地IP</div>
-                    </div>
-                </div>
-
-                <div class="network-card">
-                    <div class="network-card-title">
-                        <span class="status-indicator" id="status-twitter"></span>
-                        <span>墙外测试<span class="network-card-subtitle">X.com</span></span>
-                    </div>
-                    <div class="network-info-content">
-                        <span id="twitter-ip" class="ip-text">加载中...</span>
-                        <div class="location-text">
-                            <span id="twitter-country" class="country-text">-</span>
-                            <span id="twitter-city" class="city-text">-</span>
-                        </div>
-                        <div class="network-tip">· 您访问推特(x.com)等网站所使用的IP</div>
-                    </div>
+                <!-- 站点延迟监测（卡片由脚本生成） -->
+                <div class="latency-cards" id="latency-cards">
+                    <!-- 卡片由 script.js 动态生成 -->
                 </div>
             </div>
-
-            <!--  网站延迟测试  -->
-            <div class="latency-cards" id="latency-cards">
-                <!-- 卡片将通过JavaScript动态生成 -->
-            </div>
         </div>
-
-    <div class="bottom-grid">
-      <section class="panel">
-        <h2>四条出口分别看什么</h2>
-        <dl class="guide">
-          <div><dt>国内测试</dt><dd> — 走中国站点（speedtest.cn / ipip），通常是直连 ISP。</dd></div>
-          <div><dt>国外测试</dt><dd> — 未被墙的境外站点，规则里常叫「漏网之鱼」。</dd></div>
-          <div><dt>Cloudflare ProxyIP</dt><dd> — 访问 CF CDN 时的落地 IP。</dd></div>
-          <div><dt>墙外测试 X.com</dt><dd> — 访问 X 的路径，切换节点时最容易变。</dd></div>
-        </dl>
-        <div class="legend">
-          <span class="legend-chip"><i class="legend-dot good"></i>≤ 49 ms</span>
-          <span class="legend-chip"><i class="legend-dot ok"></i>50–149 ms</span>
-          <span class="legend-chip"><i class="legend-dot warn"></i>150–299 ms</span>
-          <span class="legend-chip"><i class="legend-dot bad"></i>300–999 ms</span>
-          <span class="legend-chip"><i class="legend-dot dead"></i>TIMEOUT</span>
-        </div>
-      </section>
-      <section class="panel">
-        <h2>出口变化</h2>
-        <p class="hint">切换节点后，新旧 IP 会记在这里。</p>
-        <div id="change-log" class="change-log">
-          <p class="empty">还没有变化。换一条代理节点，等几秒即可。</p>
-        </div>
-      </section>
     </div>
 
-    <p class="foot">纯前端检测，请求从你的浏览器发出，因此测到的是你当前节点。</p>
-
     <script src="script.js"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"09ad8d5b2f78480ab3a895ebec0d56c1","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 
 </html>

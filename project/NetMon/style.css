@@ -1,3 +1,10 @@
+/* ==========================================================================
+   在线网络监测面板 — 样式表
+   结构：设计令牌（亮/暗）→ 基础排版 → 顶部导航 → 网络出口卡片
+        → 延迟监测卡片 → IP 详情弹窗 → 响应式断点
+   设计体系：Cloudflare 橙 + 中性灰；间距 / 圆角 / 过渡统一走 CSS 变量
+   ========================================================================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -5,18 +12,27 @@
 }
 
 :root {
+  /* 品牌色 */
   --primary-color: #f6821f;
   --secondary-color: #fb923c;
   --accent-color: #f59e0b;
   --success-color: #10b981;
+  --destructive: #ef4444;
+
+  /* 文本与背景 */
   --text-color: #1f2937;
   --text-color-secondary: #6b7280;
   --bg-color: #fcfcfc;
   --card-bg: #ffffff;
   --border-color: #e5e7eb;
+
+  /* 阴影 */
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-lg:
     0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 8px 24px rgba(246, 130, 31, 0.25);
+
+  /* 延迟色阶（script.js getLatencyColor 内联引用，勿改名/勿删） */
   --latency-49: #008236;
   --latency-149: #7ccf00;
   --latency-299: #f59e0b;
@@ -25,17 +41,51 @@
   --latency-90: rgba(250, 171, 65, 0.5);
   --text-stroke-color: var(--bg-color);
 
-  /* 图例与面板额外用到的 CSS 变量映射 */
-  --surface: var(--card-bg);
-  --surface-2: var(--bg-color);
-  --border: var(--border-color);
-  --muted: var(--text-color-secondary);
-  --subtle: #9ca3af;
-  --good: var(--latency-49);
-  --ok: var(--latency-149);
-  --warn: var(--latency-299);
-  --bad: var(--latency-999);
-  --dead: var(--latency-1000);
+  /* 间距 scale */
+  --space-1: 0.25rem;  /* 4px  */
+  --space-2: 0.5rem;   /* 8px  */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.5rem;   /* 24px */
+  --space-6: 2rem;     /* 32px */
+  --space-7: 3rem;     /* 48px */
+  --space-8: 4rem;     /* 64px */
+
+  /* 圆角 token */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+
+  /* 过渡 token */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* 顶部粘性导航 */
+  --nav-height: 64px;
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --nav-border: var(--border-color);
+
+  /* 移动端顶部导航高度（媒体查询内覆盖 --nav-height） */
+  --nav-height-mobile: 52px;
+
+  /* IP 详情弹窗令牌（亮色） */
+  --panel-bg: #f9fafb;                                 /* 区块卡片底 */
+  --panel-border: #eef0f3;                             /* 卡片描边 */
+  --hairline: rgba(0, 0, 0, 0.06);                     /* 字段行发丝线 */
+  --tile-bg: #ffffff;                                  /* 安全小格底 */
+  --tile-border: #e9ecf1;                              /* 安全小格描边 */
+  --ip-hero-bg: linear-gradient(
+    135deg,
+    rgba(246, 130, 31, 0.13) 0%,
+    rgba(251, 146, 60, 0.07) 55%,
+    rgba(245, 158, 11, 0.04) 100%
+  );                                                   /* 头部渐变底 */
+  --ip-hero-border: rgba(246, 130, 31, 0.3);           /* 头部下边线 / 风险条上边线 */
+  --map-wrap-bg: #eef2f7;                              /* 地图容器底 */
+  --scrim: rgba(15, 23, 42, 0.62);                     /* 全屏遮罩 */
 }
 
 [data-theme="dark"] {
@@ -43,19 +93,46 @@
   --secondary-color: #fbbf24;
   --accent-color: #f59e0b;
   --success-color: #34d399;
+  --destructive: #f87171;
   --text-color: #f9fafb;
   --text-color-secondary: #9ca3af;
   --bg-color: #111827;
   --card-bg: #1f2937;
   --border-color: #374151;
   --text-stroke-color: var(--bg-color);
+  --shadow-glow: 0 8px 24px rgba(251, 146, 60, 0.2);
 
-  /* 深色模式变量映射 */
-  --surface: var(--card-bg);
-  --surface-2: #111827;
-  --border: var(--border-color);
-  --muted: var(--text-color-secondary);
-  --subtle: #6b7280;
+  --nav-bg: rgba(17, 24, 39, 0.8);
+
+  /* IP 详情弹窗令牌（暗色覆盖） */
+  --panel-bg: #182131;                                 /* 区块卡片底 */
+  --panel-border: #2b3648;                             /* 卡片描边 */
+  --hairline: rgba(255, 255, 255, 0.07);               /* 字段行发丝线 */
+  --tile-bg: #1b2436;                                  /* 安全小格底 */
+  --tile-border: #2b3648;                              /* 安全小格描边 */
+  --ip-hero-bg: linear-gradient(
+    135deg,
+    rgba(251, 146, 60, 0.16) 0%,
+    rgba(245, 158, 11, 0.09) 55%,
+    rgba(246, 130, 31, 0.05) 100%
+  );                                                   /* 头部渐变底 */
+  --ip-hero-border: rgba(251, 146, 60, 0.36);          /* 头部下边线 / 风险条上边线 */
+  --map-wrap-bg: #1a2231;                              /* 地图容器底 */
+  --scrim: rgba(2, 6, 23, 0.72);                       /* 全屏遮罩 */
+}
+
+/* --------------------------------------------------------------------------
+   基础
+   -------------------------------------------------------------------------- */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
@@ -74,9 +151,465 @@ body {
   transition:
     background-color 0.3s,
     color 0.3s;
+  /* 内容不足一屏时也铺满视口，避免背景在底部截断 */
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* IP 点击样式 */
+/* 锚点目标：预留粘性导航高度，避免滚动定位被导航条遮挡 */
+#network {
+  scroll-margin-top: calc(var(--nav-height) + var(--space-3));
+}
+
+/* 键盘可达性：统一 focus-visible 焦点环 */
+
+.nav-brand:focus-visible,
+#theme-switcher:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   顶部粘性导航栏（sticky + 毛玻璃）
+   -------------------------------------------------------------------------- */
+
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--nav-height);
+  padding: 0 var(--space-5);
+  /* 背景与毛玻璃交给 .top-nav::before：backdrop-filter ≠ none 会让元素成为
+     fixed 后代的包含块，交给伪元素承接可避免影响其它固定定位层，视觉无差异。 */
+  background: transparent;
+  border-bottom: 1px solid var(--nav-border);
+}
+
+.top-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;               /* .top-nav 有 z-index:900，已构成层叠上下文，负 z-index 不会漏到页面底下 */
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  text-decoration: none;
+  white-space: nowrap;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 品牌位旁的轻量副标语（移动端隐藏，避免挤占导航空间） */
+.brand-tagline {
+  flex-shrink: 0;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-color);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+/* 主题切换按钮（位于导航右侧，sun / moon 图标随 data-theme 切换） */
+#theme-switcher {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--bg-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
+}
+
+#theme-switcher:hover {
+  transform: scale(1.08) rotate(12deg);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-glow);
+}
+
+#theme-switcher svg {
+  color: var(--primary-color);
+  transition: color var(--transition-base);
+}
+
+#theme-switcher .sun-icon {
+  display: none;
+}
+
+#theme-switcher .moon-icon {
+  display: block;
+}
+
+[data-theme="dark"] #theme-switcher .sun-icon {
+  display: block;
+}
+
+[data-theme="dark"] #theme-switcher .moon-icon {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   无障碍工具类（视觉隐藏文本，供屏幕阅读器读取）
+   -------------------------------------------------------------------------- */
+
+/* 视觉隐藏：屏幕阅读器与搜索引擎可见，页面上不占位 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  /* body 是 flex column，容器作为 flex item 默认 min-width:auto，
+     会被内部宽内容（超长 IP / 主机名）顶开并撑破视口；归零后宽度由视口决定，
+     超宽内容交给内部 overflow 容器处理 */
+  min-width: 0;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   区块体系：统一节间距与区块标题（图标 + 标题 + 渐变短线）
+   -------------------------------------------------------------------------- */
+
+.section {
+  margin-bottom: var(--space-7);
+}
+
+.section-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 64px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+}
+
+.section-subtitle {
+  margin: calc(var(--space-3) * -1) 0 var(--space-5);
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* 正文内联 code：说明文案中的参数 / 字段名 */
+.section-subtitle code{
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: 0.85em;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--primary-color);
+}
+
+/* --------------------------------------------------------------------------
+   页面容器：.page 包裹页面主体，脚本通过 hidden 属性控制显隐
+   -------------------------------------------------------------------------- */
+
+/* hidden 兜底：防止个别浏览器/样式覆盖导致隐藏页漏显 */
+[hidden] {
+  display: none !important;
+}
+
+/* 页面切换淡入动画 */
+.page {
+  animation: pageIn var(--transition-base);
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   网络出口信息
+   -------------------------------------------------------------------------- */
+
+.port-info {
+  background: var(--card-bg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-7);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.port-info code {
+  background: var(--bg-color);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: "Fira Code", "Courier New", monospace;
+  border: 1px solid var(--border-color);
+}
+
+.network-cards-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.network-card {
+  --flag-badge-url: none;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  border: 1.5px solid var(--border-color);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 关键：grid item 的 min-width 默认为 auto，会被 nowrap 子元素顶开导致列宽随内容变化；
+     显式归零后，卡片宽度完全由 grid 轨道（repeat(4, minmax(0, 1fr))）决定，
+     脱敏态与真实态列宽恒定，超长内容由内部省略号消化。 */
+  min-width: 0;
+}
+
+/* 国旗角标：右下角模糊放大的国旗底纹（由 script.js 写入 --flag-badge-url） */
+.network-card.has-flag-badge::after {
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  right: -3px;
+  width: 90px;
+  height: 60px;
+  background-image: var(--flag-badge-url);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: cover;
+  filter: blur(3.18px) saturate(1.08);
+  opacity: 0.2;
+  transform: rotate(10deg);
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.network-card .network-card-title,
+.network-card .network-info-content {
+  position: relative;
+  z-index: 2;
+}
+
+[data-theme="dark"] .network-card.has-flag-badge::after {
+  opacity: 0.3;
+}
+
+.network-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--primary-color);
+  box-shadow: 0 12px 20px rgba(246, 130, 31, 0.15);
+}
+
+.network-card-title {
+  font-size: 14px;
+  color: var(--text-color);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  /* 标题行不吃 min-content 撑宽：允许在卡片宽度内收缩/换行 */
+  min-width: 0;
+}
+
+.title-text {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 4px;
+  flex-wrap: wrap;
+  /* 同上：flex 子项默认 min-width: auto，长副标题（如墙外测试「谷歌(Google)/推特(Twitter)」）
+     会顶开卡片；归零并允许收缩，宽度由 .network-card 决定 */
+  min-width: 0;
+}
+
+.title-main {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.title-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+}
+
+/* 墙外测试副标题：谷歌 / 推特彩色文本（默认无下划线，悬停显现） */
+.tw-subtitle-google {
+  color: #3a7ae7;
+  text-decoration: none;
+}
+
+.tw-subtitle-twitter {
+  color: #04abe7;
+  text-decoration: none;
+}
+
+.tw-subtitle-google:hover,
+.tw-subtitle-twitter:hover {
+  text-decoration: underline;
+}
+
+/* 墙外测试副标题：可点击切换的入口（非当前选中项） */
+.cf-subtitle-switch {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.cf-subtitle-switch:hover {
+  opacity: 0.75;
+}
+
+.cf-subtitle-switch:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* 墙外测试副标题：入口之间的分隔符 */
+.cf-subtitle-sep {
+  color: var(--text-color-secondary);
+  opacity: 0.6;
+  margin: 0 2px;
+}
+
+/* CF 卡副标题：双出口富文本（含可切换 span）时提升不透明度 */
+.title-subtitle.cf-subtitle-rich {
+  opacity: 1;
+}
+
+/* CF 卡副标题：IPv4 出口配色 */
+.cf-subtitle-v4 {
+  color: #22c55e;
+}
+
+/* CF 卡副标题：IPv6 出口配色 */
+.cf-subtitle-v6 {
+  color: #3b82f6;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-loading {
+  background: #fbbf24;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-success {
+  background: #10b981;
+}
+
+.status-error {
+  background: var(--destructive);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.network-info-content {
+  padding: 0.5rem;
+  /* 透明背景：避免盖住卡片右下角的国旗角标（.network-card.has-flag-badge::after） */
+  background: transparent;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  /* 归零 flex 容器子项的自动最小尺寸，阻止内部 nowrap 文本反向撑开卡片 */
+  min-width: 0;
+}
+
+/* IP 点击样式（第一段：交互基础态；第二段：排版细则，顺序与原文件一致） */
 .ip-text {
   transition: all 0.2s ease;
   display: inline-flex;
@@ -86,51 +619,162 @@ body {
   border-radius: 6px;
 }
 
+.ip-text {
+  color: var(--text-color);
+  font-weight: 600;
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: 1rem;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* 「网络状态」卡的 IP（.ip-text）：热区仅「IP 文本 + 放大镜」两处，行内空白不响应。
+   关键在 `width: fit-content`（收缩到内容宽度 = 文本 + ::after 放大镜），不能是 100%。
+   注：父级 .network-info-content 是 flex column 容器，子项 inline-block 会被块化计算为
+   block —— 收窄靠的是 width 而非 display，故 display 保持 block。 */
 .ip-text.clickable {
+  display: block;
+  position: relative;
   cursor: pointer;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.ip-text.clickable:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-1px);
-}
-
-.ip-text .loading-spinner {
+/* 放大镜图标：::after 以 inline-block 跟随 IP 文本右侧，
+   悬停仅放大图标，不整块填充底色。 */
+.ip-text.clickable::after {
+  content: "";
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-left: 6px;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  background-size: 13px 13px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  opacity: 0.9;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
-@keyframes spin {
+.ip-text.clickable:hover::after {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* 查询中的转圈 spinner（占用放大镜位置） */
+.ip-text.clickable.is-loading::after {
+  background-image: none;
+  border: 2px solid rgba(33, 150, 243, 0.25);
+  border-top-color: #2196f3;
+  border-radius: 50%;
+  opacity: 1;
+  animation: ipIconSpin 0.9s linear infinite;
+}
+
+[data-theme="dark"] .ip-text.clickable.is-loading::after {
+  border-color: rgba(144, 202, 249, 0.25);
+  border-top-color: #90caf9;
+}
+
+@keyframes ipIconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
   to {
     transform: rotate(360deg);
   }
 }
 
-/* IP 详情弹窗 */
+/* 查询中由 JS 追加的 spinner span（「网络状态」卡）：内联追加到 IP 文本之后，与放大镜同位 */
+.ip-text.clickable .loading-spinner {
+  position: static;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(33, 150, 243, 0.25);
+  border-top-color: #2196f3;
+  border-radius: 50%;
+  animation: ipIconSpin 0.9s linear infinite;
+}
+
+[data-theme="dark"] .ip-text.clickable .loading-spinner {
+  border-color: rgba(144, 202, 249, 0.25);
+  border-top-color: #90caf9;
+}
+
+/* loading 期间隐藏放大镜 ::after，避免与 spinner 重叠 */
+.ip-text.clickable:has(.loading-spinner)::after {
+  display: none;
+}
+
+.location-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--text-color-secondary);
+}
+
+.country-text {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  /* 由 flex-shrink: 0 改为可收缩：地址文本长度随脱敏状态双向变化
+     （SG ******** *************** 31 字符 ↔ SG AS31898 Oracle Corporation 27 字符），
+     不可让内容决定宽度。min-width:0 + overflow:hidden + 省略号，
+     宽度跟随受约束的父级 .location-text，两态恒等。 */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.network-info-content .error {
+  color: var(--destructive);
+  font-style: italic;
+}
+
+.network-tip {
+  width: 100%;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-color-secondary);
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   IP 详情弹窗（script.js 动态生成）
+   结构层级：.ip-detail-content > (.ip-detail-head + .ip-detail-columns)
+   注意：不得引入 .ip-detail-body 层，否则会破坏桌面双栏 + 移动端 order 重排
+   -------------------------------------------------------------------------- */
+
 .ip-detail-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+  inset: 0;
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.2s ease;
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: ipFadeIn 0.22s ease;
 }
 
-@keyframes fadeIn {
+@keyframes ipFadeIn {
   from {
     opacity: 0;
   }
@@ -141,139 +785,623 @@ body {
 }
 
 .ip-detail-content {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 28px;
-  padding-right: 20px;
-  /* 为滚动条留出空间 */
-  max-width: 600px;
-  width: 100%;
-  max-height: 85vh;
+  position: relative;
+  width: min(880px, 94vw);
+  max-height: min(86vh, 940px);
   overflow-y: auto;
   overflow-x: hidden;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 0;
+  /* 内边距交给各分区自己控制，头部可做「满宽渐变条」 */
   box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.3),
-    0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.3s ease;
-  position: relative;
+    0 24px 60px -12px rgba(0, 0, 0, 0.42),
+    0 8px 20px -8px rgba(0, 0, 0, 0.24);
+  animation: ipSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes slideUp {
+@keyframes ipSlideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(24px) scale(0.99);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-.ip-detail-close {
+@media (prefers-reduced-motion: reduce) {
+
+  .ip-detail-modal,
+  .ip-detail-content {
+    animation: none;
+  }
+
+  /* IP 放大镜与查询 spinner：尊重系统「减弱动态效果」。
+     选择器需同时覆盖 .ip-text.clickable::after 与 .loading-spinner。
+     带 !important：本块位于文件中部，与其后的 transition/animation 声明同特异性，
+     不加会被后者覆盖。 */
+  .ip-text.clickable::after,
+  .loading-spinner,
+  .ip-text.clickable:hover::after {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ---------- 头部：IP 主视觉 + 综合风险徽章 + 复制 + 关闭 ---------- */
+.ip-detail-head {
+  position: sticky;
+  top: 0;
+  /* 必须高于 .ip-detail-columns：内容向上滚动时头部要盖住它。
+     配合 .ip-detail-map 的 isolation:isolate（把地图内部层级关进盒子），
+     两者一起才能保证「地图永不盖住头部」。 */
+  z-index: 10;
+  padding: 18px 22px 16px;
+  background: var(--ip-hero-bg), var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* 头部右侧径向光晕：让主视觉有「被点亮」的焦点感 */
+.ip-detail-head::after {
+  content: "";
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: -60%;
+  right: -6%;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 130, 31, 0.18) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+[data-theme="dark"] .ip-detail-head::after {
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.16) 0%, transparent 68%);
+}
+
+.ip-head-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.ip-head-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+  margin-bottom: 6px;
+}
+
+.ip-head-eyebrow .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success-color);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+}
+
+/* IP 地址：等宽大字，点击即复制（保留 .ip-detail-copy-btn 契约） */
+.ip-detail-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 2px 0;
   background: transparent;
   border: none;
-  font-size: 28px;
+  font: inherit;
+  color: var(--text-color);
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: clamp(1.25rem, 3.4vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
   cursor: pointer;
-  color: var(--text-color-secondary);
-  width: 32px;
-  height: 32px;
-  display: flex;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+  word-break: break-all;
+  text-align: left;
+}
+
+.ip-detail-copy-btn:hover {
+  color: var(--primary-color);
+}
+
+.ip-detail-copy-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+/* 复制图标：常态弱化，悬停强调（替代裸 📋 表情，观感更克制） */
+.ip-copy-chip {
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s;
-  padding: 0;
-  line-height: 1;
-}
-
-.ip-detail-close:hover {
-  background: var(--border-color);
-  color: var(--text-color);
-  transform: rotate(90deg);
-}
-
-.ip-detail-title {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 24px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: rgba(246, 130, 31, 0.1);
   color: var(--primary-color);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding-right: 40px;
-  /* 为关闭按钮留出空间 */
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
-.ip-detail-source {
-  font-size: 12px;
-  font-weight: 400;
+[data-theme="dark"] .ip-copy-chip {
+  background: rgba(251, 146, 60, 0.14);
+}
+
+.ip-detail-copy-btn:hover .ip-copy-chip {
+  background: rgba(246, 130, 31, 0.2);
+  transform: scale(1.06);
+}
+
+.ip-copy-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 复用 .ip-detail-copy-icon 类名（此处仅作视觉弱化） */
+.ip-detail-copy-icon {
+  display: none;
+}
+
+.ip-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--space-2);
+  margin-top: 10px;
+  font-size: 0.78rem;
   color: var(--text-color-secondary);
-  opacity: 0.7;
-  padding: 4px 10px;
-  background: var(--bg-color);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  position: relative;
+  z-index: 1;
+}
+
+/* meta 单项：标签弱化 + 值强调（把「基本信息」字段搬进头部用） */
+.ip-head-meta .meta-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
   white-space: nowrap;
 }
 
-.ip-detail-section {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+.ip-head-meta .meta-key {
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
+.ip-head-meta .meta-val {
+  font-family: "Fira Code", "Courier New", monospace;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+/* 方案 A：单行横排 —— 高频 4 项常驻，空间不足时自动折行 */
+.ip-head-meta--inline {
+  row-gap: 5px;
+}
+
+.ip-detail-close {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  color: var(--text-color-secondary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.ip-detail-close:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(246, 130, 31, 0.08);
+  transform: rotate(90deg);
+}
+
+.ip-detail-close:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ---------- 综合风险条：徽章 + 风险刻度尺（本条为新增信息可视化） ---------- */
+.ip-risk-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ip-hero-border);
+}
+
+.ip-risk-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-color-secondary);
+}
+
+.ip-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: "Fira Code", "Courier New", monospace;
+  white-space: nowrap;
+}
+
+/* 风险刻度尺：5 段色阶（与 getAbuseScoreBadgeClass 的档位一一对应） */
+.ip-risk-meter {
+  flex: 1 1 160px;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ip-risk-track {
+  position: relative;
+  display: flex;
+  height: 7px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--border-color);
+}
+
+.ip-risk-track i {
+  flex: 1;
+  display: block;
+}
+
+.ip-risk-track i:nth-child(1) {
+  background: #10b981;
+}
+
+.ip-risk-track i:nth-child(2) {
+  background: #22c55e;
+}
+
+.ip-risk-track i:nth-child(3) {
+  background: #eab308;
+}
+
+.ip-risk-track i:nth-child(4) {
+  background: #f97316;
+}
+
+.ip-risk-track i:nth-child(5) {
+  background: #dc2626;
+}
+
+.ip-risk-track i.dim {
+  opacity: 0.16;
+}
+
+/* 合并后的「住宅 / 商用」分隔符：弱化处理，避免抢走类型色的注意力 */
+.type-sep {
+  margin: 0 5px;
+  color: var(--text-color-secondary);
+  opacity: 0.55;
+  font-weight: 500;
+}
+
+.score-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+.score-help-icon:hover {
+  background: rgba(59, 130, 246, 0.28);
+  transform: scale(1.1);
+}
+
+[data-theme="dark"] .score-help-icon {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+/* 评分算法气泡（沿用 script.js toggleScoreTooltip 契约：紧邻 .score-help-icon 的兄弟节点） */
+.score-tooltip {
+  display: none;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10001;
+  width: 90%;
+  max-width: 420px;
+  padding: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--text-color-secondary);
+  text-align: left;
+  animation: ipFadeIn 0.24s ease;
+}
+
+.score-tooltip.show {
+  display: block;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-color);
 }
 
-.ip-detail-section:last-child {
-  border-bottom: none;
+.tooltip-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.tooltip-close-hint {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.tooltip-section {
+  margin-bottom: 14px;
+}
+
+.tooltip-section:last-child {
   margin-bottom: 0;
-  padding-bottom: 0;
+}
+
+.tooltip-section-title {
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 7px;
+  font-size: 0.88rem;
+}
+
+.formula-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 7px 12px;
+  background: var(--bg-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+
+.formula-name {
+  font-weight: 500;
+}
+
+.formula-equation code {
+  font-family: "Fira Code", "Courier New", monospace;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+}
+
+[data-theme="dark"] .formula-equation code {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.risk-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+  padding: 9px 12px;
+  background: var(--bg-color);
+  border-radius: var(--radius-sm);
+}
+
+.risk-list li {
+  padding: 2px 0;
+  white-space: nowrap;
+}
+
+.risk-list li::before {
+  content: "•";
+  color: var(--primary-color);
+  margin-right: 7px;
+  font-weight: 700;
+}
+
+/* ---------- 弹窗主体：双栏 ---------- */
+/* ⚠️ 禁止新增 .ip-detail-body 包裹层：.ip-detail-columns 必须恒为
+   .ip-detail-content 的直接子级，否则桌面双栏与移动端 order 重排会同时失效。
+   主体的内边距统一由 .ip-detail-columns 承担。 */
+.ip-detail-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+  align-items: start;
+  padding: 18px 22px 22px;
+}
+
+.ip-detail-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------- 区块卡：每个 section 一张浅底卡，用底色区分层级 ---------- */
+.ip-detail-section {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
 }
 
 .ip-detail-section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-color);
-  margin-bottom: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-color);
 }
 
+.ip-detail-section-title .sec-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: rgba(246, 130, 31, 0.12);
+  font-size: 12px;
+}
+
+[data-theme="dark"] .ip-detail-section-title .sec-icon {
+  background: rgba(251, 146, 60, 0.16);
+}
+
+.ip-detail-section-title .sec-count {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-color-secondary);
+  opacity: 0.8;
+  letter-spacing: 0;
+}
+
+/* ---------- 字段行：label 左 / value 右，值统一等宽 ---------- */
 .ip-detail-item {
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
-  font-size: 14px;
-  border-bottom: 1px dashed var(--border-color);
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 7px 0;
+  font-size: 0.82rem;
 }
 
-.ip-detail-item:last-child {
-  border-bottom: none;
+.ip-detail-item + .ip-detail-item {
+  border-top: 1px solid var(--hairline);
 }
 
 .ip-detail-label {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--text-color-secondary);
   font-weight: 500;
 }
 
+/* 位置信息双列：字段 → 2 列，压缩卡片高度；
+   .ip-item-span2 跨两列独占一行（用于「当地时间」这类长值/高频项） */
+.ip-sec-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 18px;
+}
+
+.ip-sec-grid2 .ip-detail-item {
+  min-width: 0;
+}
+
+/* 双列时行间线由列内相邻项承担；跨列项需自己带上线，避免断线 */
+.ip-sec-grid2 .ip-item-span2 {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--hairline);
+}
+
+/* 双列下 label/value 改为上下堆叠：列宽仅约 150px，
+   左右排布会把「Asia/Shanghai」这类长值挤成多行，反而更难读 */
+.ip-sec-grid2 .ip-detail-item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 0;
+}
+
+.ip-sec-grid2 .ip-detail-item + .ip-detail-item {
+  border-top: none;
+}
+
+/* 两列各自的首行（第 1、2 项）不加分隔线，其余加 */
+.ip-sec-grid2 .ip-detail-item:nth-child(n+3) {
+  border-top: 1px solid var(--hairline);
+}
+
+.ip-sec-grid2 .ip-detail-item.ip-item-span2 {
+  border-top: 1px solid var(--hairline);
+}
+
+.ip-sec-grid2 .ip-detail-value {
+  text-align: left;
+  width: 100%;
+}
+
 .ip-detail-value {
-  color: var(--text-color);
-  font-weight: 600;
+  min-width: 0;
   text-align: right;
-  word-break: break-all;
+  font-family: "Fira Code", "Courier New", monospace;
+  font-weight: 600;
+  color: var(--text-color);
+  word-break: break-word;
 }
 
-.danger-text {
-  color: #ef4444;
-  font-weight: 700;
+.ip-detail-value.muted {
+  color: var(--text-color-secondary);
+  font-weight: 500;
 }
 
+/* 语义色（沿用 style.css 既有类名） */
 .success-text {
-  color: #10b981;
+  color: var(--success-color);
   font-weight: 700;
 }
 
@@ -282,9 +1410,13 @@ body {
   font-weight: 700;
 }
 
-/* IP 类型样式 */
+.danger-text {
+  color: var(--destructive);
+  font-weight: 700;
+}
+
 .ip-type-residential {
-  color: #10b981;
+  color: var(--success-color);
   font-weight: 700;
 }
 
@@ -303,16 +1435,7 @@ body {
   font-weight: 700;
 }
 
-.ip-detail-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
+/* 评分徽章色阶（getAbuseScoreBadgeClass 返回值依赖，保留） */
 .badge-success {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
@@ -325,7 +1448,7 @@ body {
 
 .badge-danger {
   background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  color: var(--destructive);
 }
 
 .badge-info {
@@ -333,7 +1456,6 @@ body {
   color: #3b82f6;
 }
 
-/* 综合滥用评分新增样式 */
 .badge-verylow {
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;
@@ -359,7 +1481,7 @@ body {
   color: #dc2626;
 }
 
-/* 暗色主题下的滥用评分样式优化 */
+/* 暗色主题下的评分徽章样式优化 */
 [data-theme="dark"] .badge-verylow {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
@@ -385,283 +1507,254 @@ body {
   color: #f87171;
 }
 
-.abuse-risk-level {
-  margin-left: 8px;
-  font-size: 12px;
-  opacity: 0.8;
+/* ---------- 安全检测：图标小格矩阵（9 项一眼扫完，替代两列文字表） ---------- */
+.ip-sec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 7px;
 }
 
-.abuse-score-note {
-  background: rgba(59, 130, 246, 0.05);
-  padding: 8px;
-  border-radius: 6px;
-  margin-top: 4px;
+.flag-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
 }
 
-[data-theme="dark"] .abuse-score-note {
-  background: rgba(59, 130, 246, 0.1);
+.flag-tile:hover {
+  transform: translateY(-2px);
 }
 
-/* 综合滥用评分帮助图标 */
-.score-help-icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  line-height: 16px;
-  text-align: center;
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-left: 6px;
-  transition: all 0.2s ease;
-  vertical-align: middle;
-  -webkit-user-select: none;
-  user-select: none;
+.flag-tile .flag-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.score-help-icon:hover {
-  background: rgba(59, 130, 246, 0.25);
-  transform: scale(1.1);
+.flag-tile .flag-state {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  font-family: "Fira Code", "Courier New", monospace;
 }
 
-[data-theme="dark"] .score-help-icon {
-  background: rgba(59, 130, 246, 0.2);
+/* 三种态：安全（绿）/ 命中（红）/ 中性提示（黄，如数据中心）/ 未提供（灰） */
+.flag-tile.is-clean {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.07);
+}
+
+.flag-tile.is-clean .flag-state {
+  color: var(--success-color);
+}
+
+.flag-tile.is-hit {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.flag-tile.is-hit .flag-state {
+  color: var(--destructive);
+}
+
+.flag-tile.is-note {
+  border-color: rgba(245, 158, 11, 0.38);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.flag-tile.is-note .flag-state {
+  color: #f59e0b;
+}
+
+.flag-tile.is-soft {
+  border-color: var(--tile-border);
+}
+
+.flag-tile.is-soft .flag-state {
+  color: var(--text-color-secondary);
+}
+
+/* ---------- 地图（Leaflet 契约类，仅调整几何与底色；瓦片由 initIpDetailMap 注入） ---------- */
+.ip-detail-map {
+  position: relative;
+  /* 240px 让视野接近 3:2，标注点周围留得出可读的上下文；
+     再矮则气泡一展开就吃掉上半屏 */
+  height: 240px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--map-wrap-bg);
+  border: 1px solid var(--panel-border);
+}
+
+.ip-detail-map-loading,
+.ip-detail-map-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+/* Leaflet 气泡与弹窗卡片风格协调 */
+.ip-detail-map .leaflet-popup-content-wrapper,
+.ip-detail-map .leaflet-popup-tip {
+  background: var(--card-bg);
+  color: var(--text-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ---------- 关键：把整张地图关进自己的层叠上下文 ----------
+   问题现象：弹窗内容向下滚动时，地图滑到 sticky 头部下面，
+   但地图里的「+/- 按钮」「标记点」「瓦片」仍然画在头部之上，把
+   IP 标题和风险条盖住。
+
+   原因：Leaflet 内部控件自带很高的 z-index
+   （.leaflet-control-zoom = 800、pane 系列 200~700），
+   而它们并不受 .ip-detail-map 约束 —— z-index 只在同一层叠上下文中比较，
+   .ip-detail-map 未形成上下文时，这些内部元素会「逃逸」到弹窗层面参与比较，
+   直接压过 .ip-detail-head 的 z-index。
+   注意：仅调低 .leaflet-top/.leaflet-bottom 不够 ——
+   .leaflet-control-zoom 是它们的子元素，自带 800，仍然会逃逸出去。
+
+   正解：让 .ip-detail-map 自身成为层叠上下文（isolation:isolate
+   配合已有的 position:relative 即可，无需指定 z-index），
+   此后内部一切 z-index 都只在地图盒子内比较，物理上不可能再盖到头部。
+   这比逐个去压 Leaflet 的控件层级更稳 —— 后者要跟随 Leaflet 版本变化。 */
+.ip-detail-map {
+  isolation: isolate;
+}
+
+/* Leaflet 控件常规层级微调（在隔离上下文内部生效，仅用于地图自身的观感：
+   控件不应压住标注点/气泡） */
+.ip-detail-map .leaflet-top,
+.ip-detail-map .leaflet-bottom {
+  z-index: 400;
+}
+
+.ip-detail-map .leaflet-control-zoom {
+  /* Leaflet 默认 800，压过 popup-pane(700) 与 marker-pane(600)，
+     会让按钮浮在标记之上；收到 400 与容器一致 */
+  z-index: 400;
+}
+
+/* 版权条是交互无关的展示信息，进一步压到瓦片之下会更干净；
+   但完全藏起来又违反高德/OSM 的署名要求，故仅降到最低可见层级并弱化观感 */
+.ip-detail-map .leaflet-control-attribution {
+  font-size: 0.62rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+/* 暗色主题下协调 Leaflet 控件 */
+[data-theme="dark"] .ip-detail-map .leaflet-bar a {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .ip-detail-map .leaflet-bar a:hover {
+  background: #374151;
+}
+
+[data-theme="dark"] .ip-detail-map .leaflet-control-attribution {
+  background: rgba(31, 41, 55, 0.8);
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .ip-detail-map .leaflet-control-attribution a {
   color: #60a5fa;
 }
 
-[data-theme="dark"] .score-help-icon:hover {
-  background: rgba(59, 130, 246, 0.3);
+/* 暗色主题：仅对瓦片窗格做反色滤镜（高德瓦片只提供亮色一套）。
+   滤镜只作用于 .leaflet-tile-pane，marker/popup/控件在其他窗格保持原色；
+   类的增删由 script.js 的 MutationObserver 随 data-theme 实时切换。
+   参数说明：invert(1)+hue-rotate(180deg) 把亮底翻成暗底；
+   brightness 不能压太低，否则路网/水域一并糊死（实测 0.9 时全图近黑）。
+   这里抬到 1.15 并适度降对比度，让翻色后仍能分辨道路与水面。
+   注：OSM 瓦片同样走这套滤镜，明暗两套底图观感一致。 */
+.ip-detail-map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(1.15) contrast(0.82) saturate(0.75);
 }
 
-/* 评分算法气泡提示 */
-.score-tooltip {
-  display: none;
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--card-bg);
+/* 地图标记的悬停提示：与卡片风格统一（气泡默认改为悬停触发，见 script.js）。
+   注意必须显式声明 pointer-events:none —— 否则提示框会吃掉鼠标事件，
+   表现为「提示一直挂在那儿不消失」，比原来的自动气泡更挡视线。 */
+.ip-detail-map .leaflet-tooltip {
+  padding: 5px 9px;
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-  z-index: 10001;
-  width: 90%;
-  max-width: 400px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--text-color-secondary);
-  text-align: left;
-  animation: tooltipFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.score-tooltip.show {
-  display: block;
-}
-
-.tooltip-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.tooltip-title {
-  font-size: 18px;
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
   color: var(--text-color);
-}
-
-.tooltip-close-hint {
-  font-size: 12px;
-  color: var(--text-color-secondary);
-  opacity: 0.7;
-}
-
-.tooltip-section {
-  margin-bottom: 16px;
-}
-
-.tooltip-section:last-child {
-  margin-bottom: 0;
-}
-
-.tooltip-section-title {
-  font-weight: 600;
-  color: var(--text-color);
-  margin-bottom: 8px;
-  font-size: 15px;
-}
-
-.formula-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: var(--bg-color);
-  border-radius: 8px;
-  margin-bottom: 6px;
-}
-
-.formula-name {
-  font-weight: 500;
-}
-
-.formula-equation code {
   font-family: "Fira Code", "Courier New", monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.ip-detail-map .leaflet-tooltip::before {
+  border-top-color: var(--border-color);
+}
+
+/* ---------- 滥用举报：突出「可联系」语义，弱化排版噪声 ---------- */
+.abuse-note {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(59, 130, 246, 0.06);
+  font-size: 0.72rem;
+  color: var(--text-color-secondary);
+  line-height: 1.6;
+}
+
+[data-theme="dark"] .abuse-note {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 13px;
 }
 
-[data-theme="dark"] .formula-equation code {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-}
-
-.risk-list {
-  list-style: none;
-  padding: 8px 12px;
-  background: var(--bg-color);
-  border-radius: 8px;
-  columns: 2;
-  column-gap: 10px;
-}
-
-.risk-list li {
-  padding: 4px 0;
-  white-space: nowrap;
-}
-
-.risk-list li::before {
-  content: "•";
-  color: var(--primary-color);
-  margin-right: 8px;
-  font-weight: bold;
-}
-
-/* 气泡提示的背景遮罩（可选，增强聚焦效果） */
-.score-tooltip-backdrop {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 10000;
-  animation: backdropFadeIn 0.2s ease;
-}
-
-.score-tooltip-backdrop.show {
-  display: block;
-}
-
-@keyframes tooltipFadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-@keyframes backdropFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-/* 让包含问号的标签支持相对定位 */
-.ip-detail-label {
-  position: relative;
-}
-
-[data-theme="dark"] .ip-detail-content {
-  background: #1f2937;
-}
-
-/* 美化滚动条 */
+/* ---------- 滚动条美化（与全站风格一致） ---------- */
 .ip-detail-content::-webkit-scrollbar {
-  width: 12px;
+  width: 10px;
   background: transparent;
 }
 
 .ip-detail-content::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: 0 16px 16px 0;
-  /* 右侧圆角与弹窗一致 */
-  margin: 4px 0;
+  margin: 6px 0;
 }
 
 .ip-detail-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    180deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
+  background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
   border-radius: 10px;
   border: 3px solid var(--card-bg);
-  /* 增加边框,让滚动条看起来更细 */
   background-clip: padding-box;
-  /* 确保背景不会覆盖边框 */
-  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .ip-detail-content::-webkit-scrollbar-thumb {
+  border-color: var(--card-bg);
 }
 
 .ip-detail-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg,
-    var(--secondary-color),
-    var(--accent-color)
-  );
-  box-shadow: 0 0 10px rgba(246, 130, 31, 0.6);
   border-width: 2px;
 }
 
-.ip-detail-content::-webkit-scrollbar-thumb:active {
-  background: var(--primary-color);
-  border-width: 2px;
-}
-
-/* 滚动条按钮 - 隐藏上下箭头 */
-.ip-detail-content::-webkit-scrollbar-button {
-  display: none;
-  height: 0;
-  width: 0;
-}
-
-.ip-detail-content::-webkit-scrollbar-button:start:decrement,
-.ip-detail-content::-webkit-scrollbar-button:end:increment {
-  display: none;
-}
-
-/* Firefox 滚动条美化 */
+/* Firefox 滚动条配色（scrollbar-color 标准属性） */
 @supports (scrollbar-color: var(--primary-color) transparent) {
   .ip-detail-content {
     scrollbar-color: var(--primary-color) transparent;
   }
-}
-
-[data-theme="dark"] .ip-detail-content::-webkit-scrollbar-thumb {
-  border-color: #1f2937;
-}
-
-[data-theme="dark"] .ip-detail-content::-webkit-scrollbar-thumb:hover {
-  border-width: 2px;
 }
 
 @supports (scrollbar-color: var(--primary-color) transparent) {
@@ -670,562 +1763,9 @@ body {
   }
 }
 
-/* 响应式 */
-@media (max-width: 768px) {
-  .ip-detail-content {
-    padding: 20px;
-    padding-right: 20px;
-    /* 移动端恢复正常padding */
-    margin: 10px;
-  }
-
-  /* 移动端隐藏滚动条或使用默认样式 */
-  .ip-detail-content::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .ip-detail-content::-webkit-scrollbar-thumb {
-    border-width: 2px;
-  }
-
-  .ip-detail-title {
-    font-size: 20px;
-    padding-right: 50px;
-    /* 移动端关闭按钮留更多空间 */
-    /* 移除 flex-direction: column, 保持默认 row 让它自然换行 */
-    /* align-items 保持 center */
-  }
-
-  .ip-detail-source {
-    font-size: 11px;
-    /* 不需要 margin-left: 0, 让 flex gap 自动处理 */
-  }
-
-  .ip-detail-item {
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .ip-detail-value {
-    text-align: left;
-  }
-}
-
-.header {
-  background: var(--card-bg);
-  color: var(--text-color);
-  padding: 2rem 1rem;
-  text-align: center;
-  border-bottom: 1px solid var(--border-color);
-}
-
-#theme-switcher {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 1000;
-  background: var(--card-bg);
-  border: 2px solid var(--border-color);
-  padding: 0.75rem;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-}
-
-#theme-switcher:hover {
-  transform: scale(1.1) rotate(15deg);
-  border-color: var(--primary-color);
-  box-shadow: 0 8px 16px rgba(246, 130, 31, 0.3);
-}
-
-#theme-switcher svg {
-  transition: all 0.3s ease;
-  color: var(--text-color);
-}
-
-#theme-switcher .sun-icon {
-  display: none;
-}
-
-#theme-switcher .moon-icon {
-  display: block;
-}
-
-[data-theme="dark"] #theme-switcher {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-}
-
-[data-theme="dark"] #theme-switcher svg {
-  color: #1f2937;
-}
-
-[data-theme="dark"] #theme-switcher:hover {
-  background: #ffffff;
-  border-color: var(--primary-color);
-}
-
-[data-theme="dark"] #theme-switcher .sun-icon {
-  display: block;
-}
-
-[data-theme="dark"] #theme-switcher .moon-icon {
-  display: none;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color) 0%,
-    var(--secondary-color) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.header p {
-  font-size: 1.1rem;
-  color: var(--text-color-secondary);
-}
-
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-.notice {
-  background: #fffbeb;
-  border-left: 4px solid #f59e0b;
-  padding: 1rem 1.5rem;
-  margin-bottom: 2rem;
-  border-radius: 8px;
-  color: #92400e;
-}
-
-[data-theme="dark"] .notice {
-  background: #2d2311;
-  border-color: #f59e0b;
-  color: #fde68a;
-}
-
-.notice strong {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.port-info {
-  background: var(--card-bg);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-}
-
-.port-info h3 {
-  margin-bottom: 1rem;
-  color: var(--primary-color);
-  font-weight: 700;
-}
-
-.port-info p {
-  margin-bottom: 0.5rem;
-  color: var(--text-color-secondary);
-}
-
-.port-info code {
-  background: var(--bg-color);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-family: "Fira Code", "Courier New", monospace;
-  border: 1px solid var(--border-color);
-}
-
-.section {
-  margin-bottom: 3rem;
-}
-
-.section-title {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--primary-color);
-  color: var(--text-color);
-  font-weight: 700;
-}
-
-.domain-cards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.domain-card {
-  background: var(--card-bg);
-  padding: 1.5rem;
-  margin-bottom: 0;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  border: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: row;
-  gap: 2rem;
-  align-items: flex-start;
-}
-
-.domain-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
-}
-
-.domain-card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.domain-card-image-wrapper {
-  flex-shrink: 0;
-  width: 630px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-}
-
-.domain-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.copy-domain {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color) 0%,
-    var(--secondary-color) 100%
-  );
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  font-weight: 600;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: none;
-  font-size: 1rem;
-}
-
-.copy-domain:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 10px rgba(0, 0, 0, 0.1);
-}
-
-.copy-domain:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.copy-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.test-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  color: var(--text-color-secondary);
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.test-link:hover {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
-  background: var(--card-bg);
-  transform: translateY(-2px);
-}
-
-.test-link svg {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.domain-badge {
-  display: inline-block;
-  padding: 0.3rem 0.8rem;
-  background: var(--bg-color);
-  color: var(--primary-color);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-/* 三网优选特殊样式 */
-.domain-badge.three-network {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(238, 90, 111, 0.4);
-  font-weight: 700;
-  position: relative;
-  animation: pulse-glow 2s ease-in-out infinite;
-  padding: 0.4rem 1rem;
-  font-size: 0.85rem;
-}
-
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 4px 12px rgba(238, 90, 111, 0.4);
-    transform: scale(1);
-  }
-
-  50% {
-    box-shadow: 0 6px 20px rgba(238, 90, 111, 0.6);
-    transform: scale(1.05);
-  }
-}
-
-.domain-badge.three-network::before {
-  content: "📊";
-  margin-right: 4px;
-}
-
-.domain-image {
-  width: 630px;
-  height: 300px;
-  max-width: 630px;
-  max-height: 300px;
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  display: block;
-  border: 1px solid var(--border-color);
-  object-fit: contain;
-}
-
-.domain-note {
-  background: var(--bg-color);
-  border-left: 4px solid var(--primary-color);
-  padding: 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: var(--text-color-secondary);
-}
-
-.domain-note strong {
-  color: var(--text-color);
-}
-
-.domain-note ul {
-  margin-left: 1.5rem;
-  margin-top: 0.5rem;
-}
-
-.domain-note-p {
-  margin-top: 0.5rem;
-}
-
-.domain-note a {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  position: relative;
-  display: inline-block;
-}
-
-.domain-note a:hover {
-  color: var(--secondary-color);
-  background: rgba(246, 130, 31, 0.1);
-  transform: translateY(-1px);
-}
-
-.domain-note a::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 8px;
-  right: 8px;
-  height: 2px;
-  background: var(--primary-color);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.domain-note a:hover::after {
-  transform: scaleX(1);
-}
-
-.highlight-text {
-  color: var(--primary-color);
-}
-
-.details {
-  background: var(--card-bg);
-  padding: 1.5rem;
-  margin-top: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow);
-}
-
-.details summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--primary-color);
-  -webkit-user-select: none;
-  user-select: none;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: background 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.details summary:hover {
-  background: var(--bg-color);
-}
-
-.details[open] summary {
-  background: var(--bg-color);
-}
-
-.details pre {
-  background: #1e293b;
-  color: #e2e8f0;
-  padding: 1rem;
-  border-radius: 8px;
-  overflow-x: auto;
-  margin-top: 1rem;
-  font-family: "Fira Code", "Courier New", monospace;
-  font-size: 0.9rem;
-  border: 1px solid #374151;
-}
-
-[data-theme="dark"] .details pre {
-  background: #0f172a;
-  border-color: #1f2937;
-}
-
-.api-section {
-  background: var(--card-bg);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-}
-
-.api-section h3 {
-  margin-bottom: 1rem;
-  color: var(--primary-color);
-  font-weight: 700;
-}
-
-.api-list {
-  list-style: none;
-}
-
-.api-list li {
-  background: var(--bg-color);
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  border-left: 4px solid var(--primary-color);
-  font-family: "Fira Code", "Courier New", monospace;
-  font-size: 0.9rem;
-  word-break: break-all;
-  color: var(--text-color-secondary);
-  transition: all 0.2s ease;
-}
-
-.api-list li:hover {
-  transform: translateX(4px);
-  background: var(--card-bg);
-}
-
-.section-subtitle {
-  margin-bottom: 1.5rem;
-  color: var(--text-color-secondary);
-}
-
-.resources-section {
-  background: var(--card-bg);
-  padding: 2rem;
-  border-radius: 12px;
-  margin-top: 2rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow);
-}
-
-.resources-section h3 {
-  margin-bottom: 1rem;
-  color: var(--text-color);
-  font-weight: 700;
-}
-
-.resources-list {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-}
-
-.resource-link {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--bg-color);
-  color: var(--primary-color);
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  border: 1px solid var(--border-color);
-  font-weight: 600;
-}
-
-.resource-link:hover {
-  border-color: var(--primary-color);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-  background: var(--card-bg);
-}
+/* --------------------------------------------------------------------------
+   Toast 提示
+   -------------------------------------------------------------------------- */
 
 .toast {
   position: fixed;
@@ -1249,301 +1789,22 @@ body {
   transform: translateY(0) translateX(0);
 }
 
-.footer {
-  background: var(--card-bg);
-  padding: 2.5rem 1rem;
-  text-align: center;
-  margin-top: 3rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.footer p {
-  color: var(--text-color-secondary);
-  font-size: 0.9rem;
-}
-
-.footer-note {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.footer a {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  position: relative;
-  display: inline-block;
-}
-
-.footer a:hover {
-  color: var(--secondary-color);
-  background: rgba(246, 130, 31, 0.1);
-  transform: translateY(-1px);
-}
-
-.footer a::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 8px;
-  right: 8px;
-  height: 2px;
-  background: var(--primary-color);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.footer a:hover::after {
-  transform: scaleX(1);
-}
-
-.foot { text-align: center; margin-top: 32px; color: var(--subtle); font-size: 14px; }
-
-#visit-count {
-  color: var(--primary-color);
-  font-weight: 700;
-  font-family: "Fira Code", "Courier New", monospace;
-  transition: color 0.3s ease;
-}
-
-@media (max-width: 768px) {
-  .header h1 {
-    font-size: 2rem;
-  }
-
-  .header p {
-    font-size: 1rem;
-  }
-
-  .section-title {
-    font-size: 1.6rem;
-  }
-
-  .domain-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .copy-domain {
-    font-size: 0.9rem;
-    padding: 8px 14px;
-  }
-
-  .container {
-    padding: 1.5rem 1rem;
-  }
-
-  .domain-card {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .domain-card-image-wrapper {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .domain-image {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-  }
-}
-
 /* 懒加载图片样式 */
-.lazy-image {
-  filter: blur(20px);
-  opacity: 0.6;
-  transition:
-    filter 0.8s ease-out,
-    opacity 0.8s ease-out;
-}
+/* --------------------------------------------------------------------------
+   延迟测试卡片（script.js 动态生成，样式契约与 JS 输出的结构对应）
+   -------------------------------------------------------------------------- */
 
-.lazy-image.loaded {
-  filter: blur(0);
-  opacity: 1;
-}
-
-/* 网络出口信息样式 */
-
-.network-cards-container {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.network-card {
-  background: var(--bg-color);
-  border-radius: 10px;
-  padding: 1rem;
-  border: 1px solid var(--border-color);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.network-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-}
-
-.network-card-title {
-  font-size: 1rem;
-  color: var(--primary-color);
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.network-card-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
-  font-weight: 400;
-  margin-left: 6px;
-}
-
-.status-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.status-loading {
-  background: #fbbf24;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.status-success {
-  background: #10b981;
-}
-
-.status-error {
-  background: #ef4444;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.network-info-content {
-  padding: 0.75rem;
-  background: var(--card-bg);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.ip-text {
-  color: var(--text-color);
-  font-weight: 600;
-  font-family: "Fira Code", "Courier New", monospace;
-  font-size: 1rem;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.location-text {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.country-text {
-  color: var(--text-color-secondary);
-  font-size: 0.875rem;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.city-text {
-  flex: 1;
-  color: var(--text-color-secondary);
-  font-size: 0.875rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.network-info-content .error {
-  color: #ef4444;
-  font-style: italic;
-}
-
-.network-tip {
-  width: 100%;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
-  line-height: 1.4;
-}
-
-@media (max-width: 1200px) {
-  .network-cards-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .network-cards-container {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .network-card {
-    padding: 0.875rem;
-  }
-
-  .port-info h3 {
-    font-size: 1.1rem;
-  }
-}
-
-/* 延迟测试卡片样式 - 科技感重新设计 */
 .latency-cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-@media (max-width: 1200px) {
-  .latency-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  gap: var(--space-4);
+  margin-top: var(--space-4);
 }
 
 .latency-card {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 0.75rem 1rem;
   position: relative;
   overflow: hidden;
@@ -1719,90 +1980,909 @@ body {
   color: #3b82f6;
 }
 
-.bottom-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 0.9fr;
-  gap: 16px;
-  margin-top: 16px;
+/* --------------------------------------------------------------------------
+   响应式
+   -------------------------------------------------------------------------- */
+
+/* 平板（≤1200px）：网格 4 列 -> 2 列
+   说明：列数变化不改变宽度约束——两条断点均使用 minmax(0, 1fr)，
+   配合 .network-card/.network-info-content/.network-card-title/.title-text 的 min-width: 0，
+   卡片宽度始终由轨道决定，脱敏态 / 真实态宽度恒等（IP 与地址超长部分由省略号消化）。 */
+@media (max-width: 1200px) {
+  .network-cards-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .latency-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 28px;
-  box-shadow: var(--shadow);
-  padding: 24px;
-}
+/* 平板 / 窄屏（≤1199px）：导航项加图标后总宽约增 200px，副标语必须更早让位，
+   否则 769–1199px 区间会出现横向挤压 / 溢出。这里同时略收内边距（10→8px），
+   消除 769–~860px 的挤压溢出。盒间间距与桌面端一致（--space-1），保持同一视觉节奏。 */
+@media (max-width: 1199px) {
+  .brand-tagline {
+    display: none;
+  }
 
-.guide { 
-  margin-top: 16px; 
-  font-size: 15px; 
-}
+  }
 
-/* 修复 dt 和 dd 单行混排 */
-.guide div {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.guide dt {
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin: 0;
-}
-
-.guide dd {
-  margin: 0;
-  color: var(--text-color);
-}
-
-.legend { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 8px; 
-  margin-top: 20px; 
-}
-
-.legend-chip {
-  display: inline-flex; 
-  align-items: center; 
-  gap: 6px;
-  padding: 4px 10px; 
-  border-radius: 99px;
-  background: var(--surface-2); 
-  border: 1px solid var(--border);
-  font-size: 12px; 
-  color: var(--muted); 
-  font-weight: 500;
-}
-
-/* 修复小圆点不显示问题 */
-.legend-dot { 
-  display: inline-block;
-  width: 7px; 
-  height: 7px; 
-  border-radius: 99px; 
-  flex-shrink: 0;
-}
-
-.legend-dot.good { background: var(--good); } 
-.legend-dot.ok { background: var(--ok); }
-.legend-dot.warn { background: var(--warn); } 
-.legend-dot.bad { background: var(--bad); }
-.legend-dot.dead { background: var(--dead); }
-
-.hint { color: var(--muted); font-size: 14px; margin: 4px 0 16px; }
-.empty { color: var(--subtle); font-size: 14px; margin-top: 24px; }
-
+/* 移动端（≤768px）：单列布局 + 顶部精简栏 */
 @media (max-width: 768px) {
+  :root {
+    /* 移动端高度单一真值来源：值定义在 :root 的 --nav-height-mobile（52px），
+       此处只做引用，避免同一数值出现两处硬编码；scroll-margin-top 随之自动更新 */
+    --nav-height: var(--nav-height-mobile);
+  }
+
+  /* 顶部精简栏：.nav-links 脱离文档流后，品牌与主题按钮两端对齐 */
+  .top-nav {
+    justify-content: space-between;
+    padding: 0 var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .nav-brand {
+    font-size: 0.95rem;
+  }
+
+  #theme-switcher {
+    width: 36px;
+    height: 36px;
+  }
+
+  #theme-switcher svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+  }
+
+  .section-subtitle {
+    margin-top: 0;
+    font-size: 0.85rem;
+  }
+
+  .container {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  /* 网络 / 延迟卡片网格塌缩为单列 */
+  .network-cards-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .network-card {
+    padding: 0.875rem;
+  }
+
   .latency-cards {
     grid-template-columns: minmax(0, 1fr);
   }
-  
-  .bottom-grid {
+
+  /* IP 详情弹窗（移动端） */
+  .ip-detail-content {
+    width: 100%;
+  }
+
+  .ip-detail-head {
+    padding: 15px 16px 14px;
+  }
+
+  /* 主体内边距：移动端在 .ip-detail-columns 上收紧 */
+  .ip-detail-columns {
+    padding: 14px 16px 18px;
+  }
+
+  /* 窄视口双栏塌缩为单栏。
+     栏容器 display:contents 退化为透传（不生成盒子），各 section 直接成为
+     .ip-detail-columns 的网格项，再按 ip-sec-* 标识类的 order 重排为阅读顺序：
+     安全(1) → 位置(2) → 运营商(3) → ASN(4) → 滥用举报(5，最后)。
+     「基本信息」已上移头部，不再参与重排。
+     桌面端 order 对块级布局无效，双栏不受影响。
+     某个 section 缺失（如无 abuse/asn）时 order 序列自动收紧，无需特殊处理。 */
+  .ip-detail-columns {
+    grid-template-columns: 1fr;
+    row-gap: 12px;
+  }
+
+  .ip-detail-column {
+    display: contents;
+  }
+
+  .ip-sec-security { order: 1; }
+  .ip-sec-location { order: 2; }
+  .ip-sec-company  { order: 3; }
+  .ip-sec-asn      { order: 4; }
+  .ip-sec-abuse    { order: 5; }
+
+  /* 移动端地图略矮，减少长弹窗占屏 */
+  .ip-detail-map {
+    height: 200px;
+  }
+
+  /* 单栏时位置字段塌回单列，避免窄屏双列挤压 */
+  .ip-sec-grid2 {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .ip-sec-grid2 .ip-detail-item {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .ip-sec-grid2 .ip-detail-value {
+    text-align: right;
+  }
+
+  .ip-sec-grid2 .ip-detail-item:nth-child(n+2) {
+    border-top: 1px solid var(--hairline);
+  }
+
+  /* 移动端隐藏滚动条或使用默认样式 */
+  .ip-detail-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .ip-detail-content::-webkit-scrollbar-thumb {
+    border-width: 2px;
+  }
+
+  .risk-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   紧凑矩阵响应式体系（移动端一屏方案）
+   本段规则集中放在文件末尾，同特异性下覆盖更早的断点
+   （如 ≤1200px 的 2 列延迟卡 → 平板 4 列瘦卡）。
+   段内结构：基态 → 纵向弹性链路 → 桌面保险丝 → 平板收紧 → 平板瘦卡
+             → 紧凑矩阵主块 → 列数分配 → 高度充裕档 → 移动收紧档 → 极矮形态
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   一、组件基态：延迟分区行（紧凑形态显示，桌面隐藏）+ 地域图例 + 副标题简版
+   -------------------------------------------------------------------------- */
+
+.latency-head {
+  display: none;
+}
+
+.latency-head-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.lat-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.lat-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+.lat-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 图例色与延迟卡左缘色条呼应：国内绿 / 国际蓝 */
+.lat-legend-dot.domestic {
+  background: #10b981;
+}
+
+.lat-legend-dot.international {
+  background: #3b82f6;
+}
+
+/* 墙外测试副标题简版（X / 谷歌）：桌面隐藏，紧凑矩阵内启用 */
+.subtitle-compact {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   二、纵向弹性链路（一屏地基）：body → .container → .page → .port-info
+   全链路 flex column；追加式写法，.container 的 max-width:1280px 等既有值不动
+   -------------------------------------------------------------------------- */
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 显式声明：防 [hidden] 被 flex 布局击穿 */
+.page[hidden] {
+  display: none;
+}
+
+.port-info {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   三、桌面高度保险丝（≥1200px）：只收间距密度不换范式（1920×1080 不受影响）
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 1200px) and (max-height: 910px) {
+  /* 紧凑内距 */
+  .port-info {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .network-cards-container {
+    margin-top: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .network-card {
+    padding: 10px;
+  }
+
+  .latency-cards {
+    margin-top: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  }
+
+@media (min-width: 1200px) and (max-height: 800px) {
+  .section-title {
+    font-size: 1.15rem;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+  }
+
+  .latency-card {
+    min-height: 60px;
+  }
+
+  .latency-status {
+    font-size: 1.35rem;
+  }
+
+  .network-info-content {
+    padding: 0.35rem 0.5rem;
+    gap: 0.25rem;
+  }
+
+  }
+
+@media (min-width: 1200px) and (max-height: 740px) {
+  .network-tip {
+    display: none;
+  }
+
+  .network-card-title {
+    margin-bottom: 5px;
+    padding-bottom: 4px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   四、平板轻收紧（769–1199px 且高度 ≤820px）
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 769px) and (max-width: 1199px) and (max-height: 820px) {
+  .port-info {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  }
+
+/* --------------------------------------------------------------------------
+   五、平板常规（769–1199px）：延迟卡由既有 ≤1200px 断点的 2 列改为 4 列瘦卡
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 769px) and (max-width: 1199px) {
+  .latency-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .latency-card {
+    padding: 0.6rem 0.8rem;
+    min-height: 64px;
+  }
+
+  .latency-card-icon-wrapper {
+    width: 30px;
+    height: 30px;
+  }
+
+  .latency-card-icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .latency-card-name {
+    font-size: 0.9rem;
+  }
+
+  .latency-status {
+    font-size: 1.3rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   六、紧凑矩阵主块（本稿核心）
+   生效范围：≤768 移动，或 769–1199 且高度 ≤780（横屏手机 / 矮平板）
+   —— 出口卡改 3 行紧凑卡；延迟卡改地域色条芯片；说明文案隐藏
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px),
+  (min-width: 769px) and (max-width: 1199px) and (max-height: 780px) {
+
+  /* 容器内距收紧到 12px 12px 10px：
+     默认的 var(--space-5) var(--space-4)（24px/16px）会吃掉一屏余量 */
+  .container {
+    padding: 12px 12px 10px;
+  }
+
+  .section-subtitle {
+    display: none;
+  }
+
+  /* 紧凑形态下标题去掉下缘渐变短线与间距，以保一屏余量 */
+  .section-title {
+    font-size: 1.05rem;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  /* 连带归零：border 归零后残留的渐变短线（bottom:-1px）会悬空叠压标题文字底部 */
+  .section-title::after {
+    display: none;
+  }
+
+  /* 紧凑内距 */
+  .port-info {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  /* —— 出口紧凑卡 —— */
+  .network-cards-container {
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .network-card {
+    padding: 9px 10px;
+    border-width: 1px;
+    border-radius: 10px;
+  }
+
+  /* 国旗角标随卡片缩小 */
+  .network-card.has-flag-badge::after {
+    width: 64px;
+    height: 42px;
+    bottom: -9px;
+    right: -2px;
+  }
+
+  .network-card-title {
+    margin-bottom: 5px;
+    padding-bottom: 0;
+    border-bottom: 0;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+  }
+
+  .title-text {
+    flex-wrap: nowrap;
+    align-items: baseline;
+  }
+
+  .title-main {
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .title-subtitle {
+    font-size: 11px;
+    line-height: 1.3;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 副标题双版本：紧凑形态换简版开关「X / 谷歌」（热区 ≥24px 由 padding 补足） */
+  .subtitle-full {
+    display: none;
+  }
+
+  .subtitle-compact {
+    display: inline-flex;
+    align-items: baseline;
+    min-width: 0;
+  }
+
+  .subtitle-compact .cf-subtitle-switch {
+    padding: 2px 1px;
+  }
+
+  .network-info-content {
+    padding: 0;
+    gap: 3px;
+  }
+
+  .ip-text {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* 放大镜图标随 IP 字号缩小 */
+  .ip-text.clickable::after {
+    width: 11px;
+    height: 11px;
+    background-size: 11px 11px;
+    margin-left: 5px;
+  }
+
+  .location-text {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .country-text {
+    font-size: 11px;
+  }
+
+  .network-tip {
+    display: none;
+  }
+
+  /* —— 延迟分区行 + 地域图例（基态隐藏，紧凑形态显示） —— */
+  .latency-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 14px;
+    min-width: 0;
+  }
+
+  /* —— 延迟芯片：地域信息由左缘 3px 色条承载，与图例呼应 —— */
+  .latency-cards {
+    margin-top: 6px;
+    gap: 7px;
+  }
+
+  .latency-card {
+    padding: 6px 7px 6px 9px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-left: 3px solid var(--border-color);
+    min-height: 0;
+    box-shadow: none;
+    display: block;
+    /* P1-1：grid item 归零最小宽度，防 nowrap 文本顶开轨道 */
+    min-width: 0;
+  }
+
+  .latency-card:has(.latency-card-region-domestic) {
+    border-left-color: #10b981;
+  }
+
+  .latency-card:has(.latency-card-region-international) {
+    border-left-color: #3b82f6;
+  }
+
+  .latency-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+  }
+
+  .latency-card-info {
+    gap: 4px;
+    /* P1-1：flex 链允许收缩，名称/状态的省略号才能生效 */
+    min-width: 0;
+  }
+
+  .latency-card-icon-wrapper {
+    width: 15px;
+    height: 15px;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .latency-card-icon-wrapper svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .latency-card-text {
+    gap: 4px;
+    flex: 1 1 auto;
+    /* P1-1：文字列允许收缩（flex 链归零最小宽度） */
+    min-width: 0;
+  }
+
+  .latency-card-name {
+    font-size: 10.5px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: none;
+    /* P1-1：nowrap 防止名称列被挤窄后逐字竖排换行（回归证据：name 23.7×80px） */
+    white-space: nowrap;
+    /* P1 修补：行高 1.2 收紧芯片纵向（继承 1.6 时单行占 16.8px） */
+    line-height: 1.2;
+  }
+
+  /* 地域徽章隐藏：信息由左缘色条 + 分区行图例承载 */
+  .latency-card-region {
+    display: none;
+  }
+
+  .latency-status {
+    /* 桌面态为 position:absolute（right:0 top:50% 垂直居中），
+       在纵排芯片内会与名称行重叠，这里还原为流内元素后右对齐 */
+    position: static;
+    right: auto;
+    top: auto;
+    transform: none;
+    margin-left: 0;
+    font-size: 15px;
+    text-align: right;
+    text-shadow: none;
+    /* P1-1：状态文本（如 TIMEOUT，实测 81.3px）同样 nowrap+省略，不参与挤压换行 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* P1 修补：行高 1.2 收紧芯片纵向（继承 1.6 时 15px 占 24px） */
+    line-height: 1.2;
+  }
+
+  .latency-status .unit {
+    font-size: 9px;
+  }
+
+  /* 心电背景装饰仅桌面渲染 */
+  .latency-graph-container {
+    display: none;
+  }
+
+  }
+
+/* --------------------------------------------------------------------------
+   七、紧凑矩阵列数分配：移动 2×2 出口 + 4×2 芯片；矮平板 4 列出口 + 4×2 芯片
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .network-cards-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .latency-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1199px) and (max-height: 780px) {
+  .network-cards-container {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .latency-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   八、高度充裕档（≤768 且 ≥820h）：延迟 4×2 芯片升格为 2 列 × 4 行迷你横卡
+   （390×844 / 430×932 / 640×960 / 768×1024 等；高度不足自动回落 4×2 芯片）
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) and (min-height: 820px) {
+  .latency-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .latency-card {
+    padding: 9px 10px 9px 12px;
+    border-radius: 11px;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+  }
+
+  .latency-card-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .latency-card-info {
+    gap: 7px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .latency-card-icon-wrapper {
+    width: 24px;
+    height: 24px;
+  }
+
+  .latency-card-icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .latency-card-name {
+    font-size: 12.5px;
+  }
+
+  .latency-status {
+    margin-left: auto;
+    font-size: 17px;
+  }
+
+  .latency-status .unit {
+    font-size: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   九、移动收紧档（≤768 且 ≤640h）：出口卡降 2 行制（IP·归属同行）
+   （覆盖 320×568 / 360×640）
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) and (max-height: 640px) {
+  .container {
+    padding: 8px 10px 8px;
+  }
+
+  .port-info {
+    padding: 9px;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 1rem;
+  }
+
+  .network-cards-container {
+    margin-top: 5px;
+    gap: 6px;
+  }
+
+  .network-card {
+    padding: 8px 9px;
+  }
+
+  .title-main {
+    font-size: 12px;
+  }
+
+  .country-text {
+    font-size: 10.5px;
+  }
+
+  /* IP · 归属 同行（2 行制卡） */
+  .network-info-content {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .ip-text {
+    font-size: 12px;
+    flex: 0 1 auto;
+    width: auto;
+    /* P3-1：IP 列配额 62% -> 70%，保证 ≈10 字符可读 */
+    max-width: 70%;
+  }
+
+  .location-text {
+    /* P3-1：归属列 shrink 2，压缩时优先让位给 IP 列 */
+    flex: 1 2 auto;
+    width: auto;
+    justify-content: flex-end;
+    font-size: 10.5px;
+  }
+
+  .latency-head {
+    margin-top: 9px;
+  }
+
+  .latency-cards {
+    gap: 5px;
+  }
+
+  .latency-status {
+    font-size: 13px;
+  }
+
+  }
+
+/* --------------------------------------------------------------------------
+   十、极矮形态（竖屏 ≤540h / 横屏平板 ≤560h）
+   出口卡 2 行制：IP·归属合并同行；延迟芯片单行制
+   （覆盖 320×480 / 844×390 横屏等）
+   -------------------------------------------------------------------------- */
+
+@media
+  ((max-width: 768px) and (max-height: 540px)),
+  ((min-width: 769px) and (max-width: 1199px) and (max-height: 560px)) {
+
+  .container {
+    padding: 8px 10px 8px;
+  }
+
+  .port-info {
+    padding: 9px;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+  }
+
+  .network-cards-container {
+    margin-top: 5px;
+    gap: 6px;
+  }
+
+  .network-card {
+    padding: 7px 8px;
+    border-radius: 9px;
+  }
+
+  .network-card-title {
+    margin-bottom: 3px;
+  }
+
+  .title-main {
+    font-size: 12px;
+  }
+
+  /* IP · 归属 同行 */
+  .network-info-content {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .ip-text {
+    font-size: 12px;
+    flex: 0 1 auto;
+    width: auto;
+    /* P3-1：IP 列配额 62% -> 70%，保证 ≈10 字符可读 */
+    max-width: 70%;
+  }
+
+  .location-text {
+    /* P3-1：归属列 shrink 2，压缩时优先让位给 IP 列 */
+    flex: 1 2 auto;
+    width: auto;
+    justify-content: flex-end;
+    font-size: 10.5px;
+  }
+
+  .country-text {
+    font-size: 10.5px;
+  }
+
+  /* 芯片单行制：图标+名称 | 数值 压成一行 */
+  .latency-head {
+    margin-top: 8px;
+  }
+
+  .latency-cards {
+    margin-top: 4px;
+    gap: 6px;
+  }
+
+  .latency-card {
+    padding: 4px 7px 4px 9px;
+  }
+
+  .latency-card-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .latency-status {
+    font-size: 12.5px;
+  }
+
+  .latency-status .unit {
+    font-size: 8px;
+  }
+
+  }
+
+/* 横屏平板极矮：芯片 8 列单行（1024/8 ≈ 128px 一格） */
+@media (min-width: 769px) and (max-width: 1199px) and (max-height: 560px) {
+  .latency-cards {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  /* P1-2：8 列格宽 ≈92px，文字列必须有明确 flex 分配，否则名称被状态文本挤没 */
+  .latency-card-icon-wrapper {
+    flex: 0 0 auto;
+  }
+
+  .latency-card-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    /* icon(15px)+gap 预留由 44px 收窄到 36px，让名称列多拿 8px */
+    max-width: calc(100% - 36px);
+  }
+
+  /* 名称保底 2 字符可见（省略号形式）；状态文本承担剩余压缩并截断 */
+  .latency-card-name {
+    min-width: 20px;
+  }
+
+  .latency-status {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+}
+
+/* ==========================================================================
+   导航布局：品牌位在左，主题按钮靠右
+   ========================================================================== */
+#theme-switcher {
+  margin-left: auto;
+}
+
+/* 品牌位 emoji：.nav-brand 用渐变文字裁切（-webkit-text-fill-color: transparent），
+   会把彩色 emoji 一并染成渐变实心块，故单独复位为正常彩色字形 */
+.nav-brand .brand-emoji {
+  -webkit-text-fill-color: initial;
+  -webkit-text-stroke: 0;
+  margin-right: 7px;
+  font-size: 1.1em;
+  line-height: 1;
 }
