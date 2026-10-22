@@ -32,29 +32,16 @@ function showToast(message) {
 // 主题切换
 const themeSwitcher = document.getElementById('theme-switcher');
 
-// 获取系统主题偏好
-function getSystemTheme() {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-    }
-    return 'light';
-}
+// 默认主题：深色。未手动切换过的访客一律先看到深色，不再跟随系统偏好
+// （若跟随系统，浅色系统的访客会看到浅色，与"默认深色"矛盾）。
+// 注意：index.html <head> 里有一段内联脚本承担同样的默认值，
+//       作用是在首帧绘制前就把 data-theme 落定，避免先闪一下浅色。
+const DEFAULT_THEME = 'dark';
 
-// 设置初始主题：优先使用本地存储，如果没有则跟随系统
+// 设置初始主题：优先本地存储（用户手动切过就用他的选择），否则用默认深色
 const savedTheme = localStorage.getItem('theme');
-const initialTheme = savedTheme || getSystemTheme();
+const initialTheme = savedTheme || document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
 document.documentElement.setAttribute('data-theme', initialTheme);
-
-// 监听系统主题变化（仅当用户未手动设置时）
-if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        // 只有在用户没有手动设置主题时才自动跟随系统
-        if (!localStorage.getItem('theme')) {
-            const newTheme = e.matches ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', newTheme);
-        }
-    });
-}
 
 // 主题切换事件
 themeSwitcher.addEventListener('click', () => {
@@ -1445,12 +1432,23 @@ async function fetchTwitterData() {
 
 // ============================================================
 // 网络信息隐私掩码（点击卡片可显示/隐藏真实IP与地址）
-// 说明：默认脱敏显示，仅当 networkPrivacyVisible === true 时展示真值。
-//       字段真值统一存放于 dataset.rawValue，掩码绝不能被用于任何请求。
+// 说明：默认脱敏显示；每张卡各自持有一份显隐状态（存在卡片的
+//       dataset.privacyVisible 上，'1' = 显示真值），点谁只影响谁，
+//       互不串味。字段真值统一存放于 dataset.rawValue，
+//       掩码绝不能被用于任何请求。
 // ============================================================
 
-// 网络信息默认脱敏显示（点击卡片可显示真实值）
-let networkPrivacyVisible = false;
+/**
+ * 判断某元素所属的网络卡片当前是否处于「显示真实值」状态。
+ * 状态按卡片独立：未归属任何卡片时一律按脱敏处理。
+ * @param {HTMLElement} scopeElement 卡片内的任意元素（通常是字段本身）
+ * @returns {boolean} 该卡片是否显示真值
+ */
+function isNetworkPrivacyVisible(scopeElement) {
+    if (!scopeElement || typeof scopeElement.closest !== 'function') return false;
+    const card = scopeElement.closest('.network-card');
+    return Boolean(card && card.dataset.privacyVisible === '1');
+}
 
 // 需要参与掩码渲染的字段三件套配置（ip 类 / location 类）
 const NETWORK_FIELD_CONFIGS = [
@@ -1612,7 +1610,7 @@ function renderNetworkFieldDisplay(fieldElement, options = {}) {
     }
 
     let displayValue = rawValue;
-    if (!networkPrivacyVisible) {
+    if (!isNetworkPrivacyVisible(fieldElement)) {
         displayValue = maskType === 'ip'
             ? maskNetworkIpValue(rawValue)
             : maskNetworkLocationValue(rawValue);
@@ -1683,35 +1681,49 @@ function clearNetworkFieldValue(fieldId) {
 }
 
 /**
- * 刷新全部网络字段显示（并同步刷新 4 张卡的国旗角标）。
+ * 刷新「单张卡片」内的全部网络字段显示（并同步刷新该卡的国旗角标）。
+ * 只处理归属这张卡的字段，其它卡片保持各自状态不受影响。
+ * @param {HTMLElement} card 网络卡片元素
  * @param {boolean} animate 是否使用逐字符动画
  */
-function refreshAllNetworkFieldDisplays(animate = false) {
+function refreshNetworkCardFieldDisplays(card, animate = false) {
+    if (!card) return;
+
     NETWORK_FIELD_CONFIGS.forEach(({ id }) => {
         const fieldElement = document.getElementById(id);
+        // 只渲染属于这张卡的字段（四张卡各有独立字段，id 全局唯一）
+        if (!fieldElement || fieldElement.closest('.network-card') !== card) return;
         renderNetworkFieldDisplay(fieldElement, { animate });
     });
 
-    applyNetworkCardFlag('ipip-country');
-    applyNetworkCardFlag('overseas-country');
-    applyNetworkCardFlag('cf-country');
-    applyNetworkCardFlag('twitter-country');
+    ['ipip-country', 'overseas-country', 'cf-country', 'twitter-country'].forEach(countryId => {
+        const countryElement = document.getElementById(countryId);
+        if (!countryElement || countryElement.closest('.network-card') !== card) return;
+        applyNetworkCardFlag(countryId);
+    });
 }
 
 /**
- * 切换隐私开关（显示 / 隐藏真实 IP 与地址）。
+ * 切换「被点击的那一张卡片」的隐私开关（只影响它自己，不波及其它卡片）。
  * @param {Event} event 触发事件
+ * @param {HTMLElement} [card] 目标卡片，缺省取 event.currentTarget
  */
-function toggleNetworkPrivacy(event) {
+function toggleNetworkPrivacy(event, card) {
     if (event) event.stopPropagation();
-    networkPrivacyVisible = !networkPrivacyVisible;
-    refreshAllNetworkFieldDisplays(true);
-    // 出口变化记录与卡片保持同一套脱敏口径
-    renderExitChanges();
+
+    const targetCard = card || (event && event.currentTarget);
+    if (!targetCard || !targetCard.classList.contains('network-card')) return;
+
+    const nextVisible = targetCard.dataset.privacyVisible !== '1';
+    targetCard.dataset.privacyVisible = nextVisible ? '1' : '0';
+    targetCard.classList.toggle('privacy-visible', nextVisible);
+
+    refreshNetworkCardFieldDisplays(targetCard, true);
 }
 
 /**
  * 给所有网络卡片绑定「点击卡片切换隐私」事件。
+ * 每张卡独立开关：点 A 只展开 A，其余卡片保持原状态。
  * 注意：IP 文本自身的点击查询详情优先级更高，通过 closest('.ip-text') 排除。
  */
 function bindNetworkCardPrivacyToggle() {
@@ -1719,6 +1731,8 @@ function bindNetworkCardPrivacyToggle() {
     cards.forEach(card => {
         if (card.dataset.privacyToggleBound === '1') return;
         card.dataset.privacyToggleBound = '1';
+        // 显隐状态按卡片独立，初始一律脱敏
+        if (card.dataset.privacyVisible !== '1') card.dataset.privacyVisible = '0';
         card.title = '点击卡片可显示/隐藏真实IP和地址';
         card.addEventListener('click', event => {
             // 点 IP 文本 = 查详情，交给 IP 自己的 handler，不切换隐私
@@ -1728,7 +1742,7 @@ function bindNetworkCardPrivacyToggle() {
             // 存在文本选区（用户正在选文字）时不切换隐私
             const selection = window.getSelection();
             if (selection && !selection.isCollapsed && String(selection).trim()) return;
-            toggleNetworkPrivacy(event);
+            toggleNetworkPrivacy(event, card);
         });
     });
 }
@@ -2436,8 +2450,8 @@ function initIpDetailMap(container, latitude, longitude, ip) {
         applyMapSize();
         observeMapSize();
 
-        // 主题同步：手动切换按钮与系统偏好变化最终都落在 data-theme 属性上，
-        // 因此只监听 documentElement 的属性变化即可同时覆盖两条路径；
+        // 主题同步：无论是首帧的默认深色、还是用户点按钮切换，最终都落在
+        // data-theme 属性上，因此只监听 documentElement 的属性变化即可覆盖；
         // 回调只需 toggle 容器类，反色由 CSS 滤镜生效，无需重建图层
         themeObserver = new MutationObserver(applyThemeClass);
         themeObserver.observe(document.documentElement, {
@@ -3428,7 +3442,14 @@ function formatChangeTime(date) {
     return date.toLocaleTimeString('zh-CN', { hour12: false });
 }
 
-/** 渲染「出口变化」面板：默认跟随卡片的隐私开关，脱敏时只露首段 */
+/**
+ * 「出口变化」面板自身的显隐状态。
+ * 卡片改成「各卡独立」后，面板不再跟随某张卡（否则点一张卡就会连带暴露其它出口的 IP），
+ * 改为面板自己一份开关：点面板即可显示 / 隐藏真实 IP。
+ */
+let exitChangePrivacyVisible = false;
+
+/** 渲染「出口变化」面板：默认脱敏，仅当本面板开关打开时展示真值 */
 function renderExitChanges() {
     const list = document.getElementById('change-list');
     if (!list) return;
@@ -3439,8 +3460,8 @@ function renderExitChanges() {
     }
 
     list.innerHTML = exitChangeLog.map(item => {
-        const from = networkPrivacyVisible ? item.from : maskNetworkIpValue(item.from);
-        const to = networkPrivacyVisible ? item.to : maskNetworkIpValue(item.to);
+        const from = exitChangePrivacyVisible ? item.from : maskNetworkIpValue(item.from);
+        const to = exitChangePrivacyVisible ? item.to : maskNetworkIpValue(item.to);
         return `<div class="change-row">
             <time class="change-time">${escapeHtml(item.time)}</time>
             <span class="change-name">${escapeHtml(item.name)}</span>
@@ -3448,6 +3469,35 @@ function renderExitChanges() {
         </div>`;
     }).join('');
 }
+
+/** 切换「出口变化」面板自身的隐私开关（与四张卡片互不影响） */
+function toggleExitChangePrivacy(event) {
+    if (event) event.stopPropagation();
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && String(selection).trim()) return;
+    exitChangePrivacyVisible = !exitChangePrivacyVisible;
+    const panel = document.getElementById('exit-changes');
+    if (panel) panel.classList.toggle('privacy-visible', exitChangePrivacyVisible);
+    renderExitChanges();
+}
+
+/** 绑定「点击出口变化面板切换隐私」 */
+(function bindExitChangePrivacyToggle() {
+    const bind = () => {
+        const panel = document.getElementById('exit-changes');
+        if (!panel || panel.dataset.privacyToggleBound === '1') return;
+        panel.dataset.privacyToggleBound = '1';
+        panel.title = '点击面板可显示/隐藏真实IP';
+        panel.style.cursor = 'pointer';
+        panel.addEventListener('click', toggleExitChangePrivacy);
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bind);
+    } else {
+        bind();
+    }
+})();
 
 /** 记一条出口变化 */
 function recordExitChange(name, from, to) {

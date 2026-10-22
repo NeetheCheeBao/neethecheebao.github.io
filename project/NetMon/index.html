@@ -13,6 +13,15 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&family=Orbitron:wght@700;800;900&display=swap"
         rel="stylesheet">
+    <!-- 首帧主题落定：在样式表生效前就写好 data-theme，避免默认深色先闪一下浅色。
+         默认值 'dark' 与 script.js 里的 DEFAULT_THEME 保持一致。 -->
+    <script>
+        (function () {
+            var saved = null;
+            try { saved = localStorage.getItem('theme'); } catch (err) { saved = null; }
+            document.documentElement.setAttribute('data-theme', saved || 'dark');
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 
