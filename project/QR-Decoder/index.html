@@ -15,7 +15,6 @@
         <span class="logo-icon">📷</span>
         <h1>二维码解码器</h1>
       </div>
-      <p class="subtitle">免费 · 本地解析 · 支持批量 · 隐私安全</p>
     </header>
 
     <main class="main">
@@ -81,9 +80,12 @@
 
     <footer class="footer">
       <p>完全在浏览器本地解析，图片不会上传到任何服务器</p>
-      <p>基于 <a href="https://github.com/mebjas/html5-qrcode" target="_blank" rel="noopener">html5-qrcode</a> 与 jsQR</p>
+      <p>基于 <a href="https://github.com/mebjas/html5-qrcode" target="_blank" rel="noopener">html5-qrcode</a> 与 jsQR · 依赖已本地化，断网可用</p>
     </footer>
   </div>
+
+  <!-- 深度识别 / 摄像头模块的隐藏挂载点 -->
+  <div id="qr-scan-holder" aria-hidden="true"></div>
 
   <!-- 结果卡片模板 -->
   <template id="resultCardTpl">
@@ -100,8 +102,8 @@
     </div>
   </template>
 
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="script.js"></script>
+  <!-- 解码内核已本地化，不再依赖 CDN：断网/弱网也能秒开 -->
+  <script defer src="vendor/jsQR.min.js"></script>
+  <script defer src="script.js"></script>
 </body>
 </html>

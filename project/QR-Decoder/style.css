@@ -238,6 +238,66 @@ body {
 
 .preview-status.loading {
   color: var(--primary);
+  display: flex;
+  align-items: center;
+}
+
+.preview-status.loading::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 2px solid rgba(22, 119, 255, 0.25);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: qr-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes qr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 预览状态里的行内操作（深度识别） */
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-btn:disabled {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+/* 引擎未就绪提示条 */
+.engine-banner {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid #ffe7ba;
+  border-radius: 8px;
+  background: #fff7e6;
+  color: #ad6800;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 隐藏的模块挂载点：留在屏幕外，避免影响布局 */
+#qr-scan-holder {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 320px;
+  height: 320px;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .preview-status.success {

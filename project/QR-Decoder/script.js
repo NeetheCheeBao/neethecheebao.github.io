@@ -1,9 +1,11 @@
 (() => {
-  // ==================== 工具函数 ====================
+  "use strict";
+
+  // ==================== 基础工具 ====================
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-  function toast(msg, duration = 2000) {
+  function toast(msg, duration = 2200) {
     let el = $(".toast");
     if (!el) {
       el = document.createElement("div");
@@ -41,7 +43,27 @@
     URL.revokeObjectURL(url);
   }
 
-  // ==================== 历史记录（localStorage） ====================
+  const hasJsQR = () => typeof window.jsQR === "function";
+  const isImageFile = (f) =>
+    (f.type && f.type.startsWith("image/")) || /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(f.name || "");
+
+  // ==================== 解码引擎状态提示 ====================
+  function warnEngine(message) {
+    let el = $("#engineBanner");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "engineBanner";
+      el.className = "engine-banner";
+      $(".main").prepend(el);
+    }
+    el.textContent = message;
+  }
+
+  if (!hasJsQR()) {
+    warnEngine("解码引擎未能加载（vendor/jsQR.min.js 缺失或被拦截），图片无法解码。");
+  }
+
+  // ==================== 历史记录（sessionStorage） ====================
   const HISTORY_KEY = "qr_decoder_history";
   const MAX_HISTORY = 200;
 
@@ -59,7 +81,6 @@
 
   function addToHistory(content, source = "图片") {
     const list = loadHistory();
-    // 避免连续重复
     if (list[0] && list[0].content === content) return list[0];
     const item = {
       id: Date.now() + Math.random().toString(36).slice(2, 7),
@@ -97,162 +118,134 @@
   const stopCameraBtn = $("#stopCameraBtn");
   const switchCameraBtn = $("#switchCameraBtn");
 
-  // ==================== Tab 切换 ====================
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      tabs.forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
-      Object.values(panels).forEach((p) => p.classList.remove("active"));
-      const name = tab.dataset.tab;
-      panels[name].classList.add("active");
+  // ==================== 解码 Worker ====================
+  const MAX_SIDE = 1500;
+  const SCALES = [1, 0.6, 1.6, 0.35, 2.4];
+  const DECODE_TIMEOUT = 20000;
 
-      if (name === "history") renderHistory();
-      if (name !== "camera" && html5QrCode && html5QrCode.isScanning) {
-        stopCamera();
+  let worker = null;
+  let workerBroken = false;
+  let jobSeq = 0;
+  const jobs = new Map();
+
+  function getWorker() {
+    if (workerBroken) return null;
+    if (worker) return worker;
+    if (typeof Worker !== "function" || typeof OffscreenCanvas !== "function") {
+      workerBroken = true;
+      return null;
+    }
+    try {
+      worker = new Worker("decoder-worker.js");
+    } catch {
+      // file:// 直接双击打开时浏览器会禁止 Worker，退回主线程解码
+      workerBroken = true;
+      return null;
+    }
+
+    worker.onmessage = (e) => {
+      const { id, result, error } = e.data || {};
+      const job = jobs.get(id);
+      if (!job) return;
+      jobs.delete(id);
+      clearTimeout(job.timer);
+      if (error) job.reject(new Error("worker-failed"));
+      else job.resolve(result || null);
+    };
+
+    worker.onerror = () => {
+      workerBroken = true;
+      try {
+        worker.terminate();
+      } catch {}
+      worker = null;
+      jobs.forEach((job) => {
+        clearTimeout(job.timer);
+        job.reject(new Error("worker-failed"));
+      });
+      jobs.clear();
+    };
+
+    return worker;
+  }
+
+  function decodeInWorker(bitmap) {
+    const w = getWorker();
+    if (!w) return Promise.reject(new Error("worker-unavailable"));
+    return new Promise((resolve, reject) => {
+      const id = ++jobSeq;
+      const timer = setTimeout(() => {
+        jobs.delete(id);
+        reject(new Error("timeout"));
+      }, DECODE_TIMEOUT);
+      jobs.set(id, { resolve, reject, timer });
+      try {
+        w.postMessage({ id, bitmap }, [bitmap]);
+      } catch (err) {
+        clearTimeout(timer);
+        jobs.delete(id);
+        reject(new Error("worker-failed"));
       }
     });
-  });
-
-  // ==================== 图片解码 ====================
-  uploadBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    fileInput.click();
-  });
-
-  dropZone.addEventListener("click", () => fileInput.click());
-
-  dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
-
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("dragover");
-  });
-
-  dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-    const files = [...e.dataTransfer.files].filter((f) => f.type.startsWith("image/"));
-    if (files.length) handleFiles(files);
-  });
-
-  fileInput.addEventListener("change", () => {
-    const files = [...fileInput.files];
-    if (files.length) handleFiles(files);
-    fileInput.value = "";
-  });
-
-  // 粘贴支持
-  document.addEventListener("paste", (e) => {
-    if (!panels.upload.classList.contains("active")) return;
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    const files = [];
-    for (const item of items) {
-      if (item.type.startsWith("image/")) {
-        const file = item.getAsFile();
-        if (file) files.push(file);
-      }
-    }
-    if (files.length) {
-      e.preventDefault();
-      handleFiles(files);
-      toast("已粘贴图片，正在解码…");
-    }
-  });
-
-  async function handleFiles(files) {
-    resultSection.style.display = "block";
-    for (const file of files) {
-      await decodeImageFile(file);
-    }
   }
 
-  function createPreviewItem(file) {
-    const item = document.createElement("div");
-    item.className = "preview-item";
-    const url = URL.createObjectURL(file);
-    item.innerHTML = `
-      <img src="${url}" alt="preview" />
-      <div class="preview-info">
-        <div class="preview-name">${file.name || "粘贴的图片"}</div>
-        <div class="preview-status loading">正在解码…</div>
-      </div>
-    `;
-    previewList.prepend(item);
-    return {
-      el: item,
-      statusEl: item.querySelector(".preview-status"),
-      revoke: () => URL.revokeObjectURL(url),
-    };
+  // ==================== 主线程兜底解码（Worker 不可用时） ====================
+  function scanCanvas(ctx, w, h) {
+    const image = ctx.getImageData(0, 0, w, h);
+    const code = jsQR(image.data, w, h, { inversionAttempts: "attemptBoth" });
+    return code && code.data ? code.data : null;
   }
 
-  async function decodeImageFile(file) {
-    const preview = createPreviewItem(file);
-    try {
-      const result = await robustDecode(file);
-      if (result) {
-        preview.statusEl.textContent = "解码成功";
-        preview.statusEl.className = "preview-status success";
-        showResult(result, "图片上传");
-        addToHistory(result, "图片上传");
-      } else {
-        preview.statusEl.textContent = "未识别到二维码";
-        preview.statusEl.className = "preview-status error";
-      }
-    } catch (err) {
-      preview.statusEl.textContent = "未识别到二维码";
-      preview.statusEl.className = "preview-status error";
-      console.warn("Decode failed:", err);
-    } finally {
-      setTimeout(preview.revoke, 5000);
+  function stretchCanvas(ctx, w, h) {
+    const image = ctx.getImageData(0, 0, w, h);
+    const d = image.data;
+    let min = 255;
+    let max = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      if (g < min) min = g;
+      if (g > max) max = g;
     }
+    const range = max - min;
+    if (range < 16) return false;
+    const k = 255 / range;
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = (d[i] - min) * k;
+      d[i + 1] = (d[i + 1] - min) * k;
+      d[i + 2] = (d[i + 2] - min) * k;
+    }
+    ctx.putImageData(image, 0, 0);
+    return true;
   }
 
-  /**
-   * 多策略解码：提升截图、小二维码、低对比度图片的识别率
-   */
-  async function robustDecode(file) {
-    // 1. 先用 html5-qrcode 官方方法（内部有较完善的处理）
-    try {
-      const text = await Html5Qrcode.scanFile(file, false);
-      if (text) return text;
-    } catch (_) {}
-
-    // 2. 加载图片到 Image 对象
-    const img = await loadImageFromFile(file);
+  function decodeOnMainThread(source, width, height) {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const base = Math.min(1, MAX_SIDE / Math.max(width, height));
+    const seen = new Set();
 
-    // 尝试多种缩放比例（处理过大/过小的二维码）
-    const scales = [1, 0.5, 0.75, 1.5, 2, 0.25];
-    for (const scale of scales) {
-      const w = Math.max(1, Math.round(img.naturalWidth * scale));
-      const h = Math.max(1, Math.round(img.naturalHeight * scale));
-      // 限制最大边，避免内存爆炸
-      if (w > 2000 || h > 2000) continue;
+    for (const s of SCALES) {
+      const w = Math.round(width * base * s);
+      const h = Math.round(height * base * s);
+      if (w < 40 || h < 40) continue;
+
+      const key = w + "x" + h;
+      if (seen.has(key)) continue;
+      seen.add(key);
 
       canvas.width = w;
       canvas.height = h;
-      ctx.drawImage(img, 0, 0, w, h);
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(source, 0, 0, w, h);
 
-      // 尝试原图 + 反色
-      let result = tryJsQR(ctx, w, h, "attemptBoth");
+      let result = scanCanvas(ctx, w, h);
       if (result) return result;
 
-      // 增强对比度后再试
-      enhanceContrast(ctx, w, h);
-      result = tryJsQR(ctx, w, h, "attemptBoth");
-      if (result) return result;
+      if (stretchCanvas(ctx, w, h)) {
+        result = scanCanvas(ctx, w, h);
+        if (result) return result;
+      }
     }
-
-    // 3. 再试一次 html5-qrcode（某些版本对大图更稳）
-    try {
-      const text = await Html5Qrcode.scanFile(file, true);
-      if (text) return text;
-    } catch (_) {}
-
     return null;
   }
 
@@ -272,56 +265,274 @@
     });
   }
 
-  function tryJsQR(ctx, width, height, inversionAttempts = "attemptBoth") {
-    // html5-qrcode 全局暴露了 jsQR
-    if (typeof jsQR !== "function") return null;
+  /** 解码入口：Worker 优先，失败自动退回主线程 */
+  async function decodeFile(file) {
+    if (!hasJsQR()) throw new Error("engine-missing");
+
+    if (typeof createImageBitmap === "function") {
+      let bitmap = null;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch {
+        bitmap = null;
+      }
+
+      if (bitmap) {
+        if (getWorker()) {
+          try {
+            return await decodeInWorker(bitmap);
+          } catch (err) {
+            if (err.message === "timeout") throw err;
+            // Worker 出问题：bitmap 已被转移，下面重新读一次图片走主线程
+          }
+        } else {
+          try {
+            bitmap.close();
+          } catch {}
+        }
+      }
+    }
+
+    const img = await loadImageFromFile(file);
+    return decodeOnMainThread(img, img.naturalWidth, img.naturalHeight);
+  }
+
+  // ==================== 深度识别（按需加载 ZXing 内核） ====================
+  let deepLibPromise = null;
+
+  function ensureDeepLib() {
+    if (window.Html5Qrcode) return Promise.resolve();
+    if (deepLibPromise) return deepLibPromise;
+    deepLibPromise = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      const timer = setTimeout(() => {
+        deepLibPromise = null;
+        reject(new Error("加载超时"));
+      }, 15000);
+      s.src = "vendor/html5-qrcode.min.js";
+      s.onload = () => {
+        clearTimeout(timer);
+        if (window.Html5Qrcode) resolve();
+        else {
+          deepLibPromise = null;
+          reject(new Error("模块不可用"));
+        }
+      };
+      s.onerror = () => {
+        clearTimeout(timer);
+        deepLibPromise = null;
+        reject(new Error("模块加载失败"));
+      };
+      document.head.appendChild(s);
+    });
+    return deepLibPromise;
+  }
+
+  async function deepDecode(file) {
+    await ensureDeepLib();
+    const holder = $("#qr-scan-holder");
+    const scanner = new Html5Qrcode(holder.id, false);
     try {
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts,
-      });
-      return code && code.data ? code.data : null;
-    } catch {
-      return null;
+      const text = await scanner.scanFile(file, false);
+      return text || null;
+    } catch (err) {
+      // 库在「图里没有二维码」时也是 reject，这种属于正常未识别，不当成故障
+      const msg = String((err && (err.message || err)) || "");
+      if (/MultiFormat Readers|detect the code|No code|NotFoundException/i.test(msg)) return null;
+      throw err;
+    } finally {
+      try {
+        await scanner.clear();
+      } catch {}
     }
   }
 
-  /** 简单对比度增强（线性拉伸） */
-  function enhanceContrast(ctx, width, height) {
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data;
-    let min = 255, max = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (gray < min) min = gray;
-      if (gray > max) max = gray;
-    }
-    const range = max - min || 1;
-    for (let i = 0; i < data.length; i += 4) {
-      for (let c = 0; c < 3; c++) {
-        data[i + c] = Math.min(255, Math.max(0, ((data[i + c] - min) / range) * 255));
+  // ==================== Tab 切换 ====================
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      Object.values(panels).forEach((p) => p.classList.remove("active"));
+      const name = tab.dataset.tab;
+      panels[name].classList.add("active");
+
+      if (name === "history") renderHistory();
+      if (name === "camera") ensureDeepLib().catch(() => {});
+      if (name !== "camera" && html5QrCode && html5QrCode.isScanning) stopCamera();
+    });
+  });
+
+  // ==================== 图片解码 ====================
+  const objectUrls = new Set();
+
+  function revokePreviews() {
+    objectUrls.forEach((u) => URL.revokeObjectURL(u));
+    objectUrls.clear();
+  }
+
+  uploadBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    fileInput.click();
+  });
+
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    const files = [...e.dataTransfer.files].filter(isImageFile);
+    if (files.length) handleFiles(files);
+    else toast("请拖入图片文件");
+  });
+
+  fileInput.addEventListener("change", () => {
+    const files = [...fileInput.files];
+    fileInput.value = "";
+    if (files.length) handleFiles(files);
+  });
+
+  // 粘贴支持
+  document.addEventListener("paste", (e) => {
+    if (!panels.upload.classList.contains("active")) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const files = [];
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) files.push(file);
       }
     }
-    ctx.putImageData(imageData, 0, 0);
+    if (files.length) {
+      e.preventDefault();
+      handleFiles(files);
+    }
+  });
+
+  /** 选中文件后立刻出预览和状态，再逐个解码，避免「点了没反应」 */
+  async function handleFiles(files) {
+    const images = [...files].filter(isImageFile);
+    if (!images.length) {
+      toast("请选择图片文件");
+      return;
+    }
+
+    const queue = images.map((file) => ({ file, preview: createPreviewItem(file) }));
+    for (const job of queue) {
+      await decodeOne(job);
+    }
+  }
+  async function decodeOne({ file, preview }) {
+    preview.setStatus("正在解码…", "loading");
+    const t0 = performance.now();
+
+    try {
+      const text = await decodeFile(file);
+      if (text) {
+        const cost = Math.round(performance.now() - t0);
+        preview.setStatus(cost > 400 ? `解码成功 · ${cost}ms` : "解码成功", "success");
+        showResult(text, "图片");
+        addToHistory(text, "图片");
+      } else {
+        preview.setStatus("未识别到二维码", "error", { retry: true });
+      }
+    } catch (err) {
+      const msg = String((err && err.message) || err);
+      console.warn("Decode failed:", err);
+      if (msg === "engine-missing") {
+        preview.setStatus("解码引擎未加载", "error");
+        warnEngine("解码引擎未能加载（vendor/jsQR.min.js 缺失或被拦截），图片无法解码。");
+      } else if (msg === "timeout") {
+        preview.setStatus("解码超时，可重试", "error", { retry: true });
+      } else {
+        preview.setStatus("解码失败，可重试", "error", { retry: true });
+      }
+    }
+  }
+
+  function createPreviewItem(file) {
+    const item = document.createElement("div");
+    item.className = "preview-item";
+
+    const url = URL.createObjectURL(file);
+    objectUrls.add(url);
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "";
+
+    const info = document.createElement("div");
+    info.className = "preview-info";
+
+    const name = document.createElement("div");
+    name.className = "preview-name";
+    name.textContent = file.name || "粘贴的图片";
+
+    const statusEl = document.createElement("div");
+    statusEl.className = "preview-status loading";
+    statusEl.textContent = "排队中…";
+
+    info.append(name, statusEl);
+    item.append(img, info);
+    previewList.prepend(item);
+
+    function setStatus(text, cls, opts = {}) {
+      statusEl.className = `preview-status ${cls}`;
+      statusEl.textContent = text;
+      if (!opts.retry) return;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "link-btn";
+      btn.textContent = "深度识别";
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        btn.disabled = true;
+        setStatus("深度识别中…", "loading");
+        try {
+          const text = await deepDecode(file);
+          if (text) {
+            setStatus("解码成功", "success");
+            showResult(text, "图片");
+            addToHistory(text, "图片");
+          } else {
+            setStatus("仍未识别到二维码", "error");
+          }
+        } catch (err) {
+          console.warn("Deep decode failed:", err);
+          const msg = String((err && err.message) || err);
+          if (/模块|超时/.test(msg)) {
+            setStatus("识别模块加载失败", "error");
+            toast("识别模块加载失败，请确认 vendor 目录存在");
+          } else {
+            setStatus("深度识别失败", "error");
+          }
+        }
+      });
+      statusEl.append(" ", btn);
+    }
+
+    return { el: item, setStatus };
   }
 
   // ==================== 结果展示 ====================
-  function showResult(content, source) {
-    const tpl = $("#resultCardTpl");
-    const card = tpl.content.cloneNode(true);
-    const root = card.querySelector(".result-card");
-
-    root.querySelector(".result-time").textContent = formatTime();
+  function bindResultCard(root, content, source, time) {
+    root.querySelector(".result-time").textContent = formatTime(time);
     root.querySelector(".result-source").textContent = source;
     root.querySelector(".result-content").textContent = content;
 
-    const copyBtn = root.querySelector(".copy-btn");
-    copyBtn.addEventListener("click", async () => {
+    root.querySelector(".copy-btn").addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(content);
         toast("已复制到剪贴板");
       } catch {
-        // fallback
         const ta = document.createElement("textarea");
         ta.value = content;
         document.body.appendChild(ta);
@@ -337,7 +548,12 @@
       openBtn.style.display = "inline-flex";
       openBtn.href = content;
     }
+  }
 
+  function showResult(content, source) {
+    const card = $("#resultCardTpl").content.cloneNode(true);
+    const root = card.querySelector(".result-card");
+    bindResultCard(root, content, source, Date.now());
     resultList.prepend(root);
     resultSection.style.display = "block";
   }
@@ -345,18 +561,33 @@
   clearResultBtn.addEventListener("click", () => {
     resultList.innerHTML = "";
     previewList.innerHTML = "";
+    revokePreviews();
     resultSection.style.display = "none";
   });
 
-  // ==================== 摄像头 ====================
+  // ==================== 摄像头（模块按需加载） ====================
   let html5QrCode = null;
   let currentCameraId = null;
   let cameras = [];
 
   async function startCamera() {
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode("reader");
+    startCameraBtn.disabled = true;
+    const original = startCameraBtn.textContent;
+    if (!window.Html5Qrcode) startCameraBtn.textContent = "正在加载模块…";
+
+    try {
+      await ensureDeepLib();
+    } catch (err) {
+      startCameraBtn.disabled = false;
+      startCameraBtn.textContent = original;
+      toast("摄像头模块加载失败，请确认 vendor 目录存在");
+      return;
     }
+
+    startCameraBtn.disabled = false;
+    startCameraBtn.textContent = original;
+
+    if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
     try {
       cameras = await Html5Qrcode.getCameras();
@@ -365,23 +596,15 @@
         return;
       }
 
-      // 优先后置摄像头
       const backCam = cameras.find((c) => /back|rear|environment/i.test(c.label));
       currentCameraId = (backCam || cameras[0]).id;
 
       await html5QrCode.start(
         currentCameraId,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
         (decodedText) => {
-          // 防抖：相同内容 3 秒内只记录一次
           const now = Date.now();
-          if (window._lastScan === decodedText && now - (window._lastScanTime || 0) < 3000) {
-            return;
-          }
+          if (window._lastScan === decodedText && now - (window._lastScanTime || 0) < 3000) return;
           window._lastScan = decodedText;
           window._lastScanTime = now;
 
@@ -389,14 +612,12 @@
           addToHistory(decodedText, "摄像头");
           toast("扫描成功！");
         },
-        () => {} // 忽略持续扫描的错误
+        () => {}
       );
 
       startCameraBtn.style.display = "none";
       stopCameraBtn.style.display = "inline-flex";
-      if (cameras.length > 1) {
-        switchCameraBtn.style.display = "inline-flex";
-      }
+      if (cameras.length > 1) switchCameraBtn.style.display = "inline-flex";
     } catch (err) {
       console.error(err);
       toast("启动摄像头失败，请检查权限");
@@ -423,7 +644,6 @@
     const next = cameras[(idx + 1) % cameras.length];
     await stopCamera();
     currentCameraId = next.id;
-    // 短暂延迟后重启
     setTimeout(startCamera, 300);
   }
 
@@ -443,30 +663,9 @@
 
     historyList.innerHTML = "";
     list.forEach((item) => {
-      const tpl = $("#resultCardTpl");
-      const card = tpl.content.cloneNode(true);
+      const card = $("#resultCardTpl").content.cloneNode(true);
       const root = card.querySelector(".result-card");
-
-      root.querySelector(".result-time").textContent = formatTime(item.time);
-      root.querySelector(".result-source").textContent = item.source;
-      root.querySelector(".result-content").textContent = item.content;
-
-      const copyBtn = root.querySelector(".copy-btn");
-      copyBtn.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(item.content);
-          toast("已复制到剪贴板");
-        } catch {
-          toast("复制失败");
-        }
-      });
-
-      const openBtn = root.querySelector(".open-btn");
-      if (isUrl(item.content)) {
-        openBtn.style.display = "inline-flex";
-        openBtn.href = item.content;
-      }
-
+      bindResultCard(root, item.content, item.source, item.time);
       historyList.appendChild(root);
     });
   }
@@ -506,8 +705,12 @@
 
   // 页面卸载时关闭摄像头
   window.addEventListener("beforeunload", () => {
-    if (html5QrCode && html5QrCode.isScanning) {
-      html5QrCode.stop().catch(() => {});
+    if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(() => {});
+    revokePreviews();
+    if (worker) {
+      try {
+        worker.terminate();
+      } catch {}
     }
   });
 })();
